@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Carefree — Caretaker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0B1F3A; --navy2:#162944; --navy3:#1d3557;
+  --gold:#C8973A; --gold-lt:#E8B85A;
+  --cream:#FAF7F2; --cream2:#F0EBE0; --cream3:#E8E0D2;
+  --text:#1A1A2E; --muted:#7A8899; --white:#fff;
+  --green:#2E7D5E; --green-lt:#e8f5ef;
+  --red:#C0392B; --red-lt:#fdf2f2;
+  --amber:#C8740A; --amber-lt:#fef3e2;
+  --sidebar:240px; --header:60px;
+}
+html,body{height:100%;font-family:'Outfit',sans-serif;font-size:14px}
+body{background:var(--cream);color:var(--text);display:flex}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
+.sidebar{
+  width:var(--sidebar);flex-shrink:0;
+  background:var(--navy);
+  position:fixed;top:0;left:0;height:100vh;
+  display:flex;flex-direction:column;z-index:100;
+  border-right:1px solid rgba(200,151,58,0.15);
+}
+.sb-logo{
+  padding:22px 20px 18px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+  display:flex;align-items:center;gap:10px;
+}
+.sb-icon{width:34px;height:34px;background:var(--gold);border-radius:9px;display:grid;place-items:center;flex-shrink:0}
+.sb-icon svg{width:18px;height:18px;fill:var(--navy)}
+.sb-name{font-family:'Playfair Display',serif;font-size:19px;color:var(--white)}
+.sb-name span{color:var(--gold)}
+
+.sb-user{
+  padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.sb-uname{font-size:13px;font-weight:600;color:var(--white);margin-bottom:2px}
+.sb-urole{font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:.8px;text-transform:uppercase}
+
+.sb-nav{flex:1;padding:10px 12px;overflow-y:auto}
+.sb-section{
+  font-size:9px;color:rgba(255,255,255,0.25);
+  letter-spacing:1.2px;text-transform:uppercase;
+  padding:12px 10px 6px;
+}
+.sb-item{
+  display:flex;align-items:center;gap:9px;
+  padding:10px 12px;border-radius:9px;
+  color:rgba(255,255,255,0.5);font-size:13px;font-weight:500;
+  cursor:pointer;transition:all .18s;margin-bottom:1px;
+}
+.sb-item:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.85)}
+.sb-item.active{background:rgba(200,151,58,0.15);color:var(--gold-lt);border-left:2px solid var(--gold)}
+.sb-item .em{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+
+.sb-footer{padding:14px;border-top:1px solid rgba(255,255,255,0.06)}
+.btn-logout{
+  width:100%;padding:9px;border:1px solid rgba(255,255,255,0.12);
+  background:transparent;border-radius:8px;
+  color:rgba(255,255,255,0.5);font-family:'Outfit',sans-serif;
+  font-size:12px;cursor:pointer;transition:all .2s;
+}
+.btn-logout:hover{background:rgba(255,255,255,0.07);color:var(--white)}
+
+/* ── Main ─────────────────────────────────────────────────────────────── */
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+.header{
+  height:var(--header);background:var(--white);
+  border-bottom:1px solid var(--cream3);
+  padding:0 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;
+}
+.h-title{font-family:'Playfair Display',serif;font-size:19px;color:var(--navy)}
+.h-search{
+  display:flex;align-items:center;gap:8px;
+  background:var(--cream);border:1.5px solid var(--cream3);
+  border-radius:9px;padding:7px 13px;
+}
+.h-search input{
+  border:none;background:transparent;font-family:'Outfit',sans-serif;
+  font-size:13px;outline:none;color:var(--text);width:200px;
+}
+.h-search input::placeholder{color:var(--muted)}
+.h-search span{color:var(--muted);font-size:14px}
+
+.content{flex:1;padding:26px 28px;overflow-y:auto}
+
+/* ── Panels ── */
+.panel{display:none}
+.panel.active{display:block;animation:pIn .25s ease}
+@keyframes pIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ── Stats ── */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat{
+  background:var(--white);border:1px solid var(--cream3);
+  border-radius:14px;padding:20px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.stat-num{font-family:'Playfair Display',serif;font-size:30px;color:var(--navy)}
+.stat-lbl{font-size:12px;color:var(--muted);font-weight:500}
+.stat-bar{height:3px;background:var(--cream3);border-radius:2px;margin-top:6px}
+.stat-bar-fill{height:100%;border-radius:2px;background:var(--gold);width:0;transition:width .8s ease}
+
+/* ── Cards ── */
+.card{
+  background:var(--white);border:1px solid var(--cream3);
+  border-radius:16px;padding:22px;margin-bottom:18px;
+}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.card-ttl{font-size:14px;font-weight:600;color:var(--text)}
+
+/* ── Table ── */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{
+  text-align:left;padding:9px 13px;
+  font-size:10px;color:var(--muted);font-weight:600;
+  letter-spacing:.5px;text-transform:uppercase;
+  border-bottom:2px solid var(--cream3);
+}
+td{padding:11px 13px;border-bottom:1px solid var(--cream);color:var(--text);vertical-align:middle}
+tr:last-child td{border:none}
+tbody tr{cursor:default;transition:background .15s}
+tbody tr:hover td{background:var(--cream)}
+tbody tr.selected td{background:#fffbf4}
+
+/* ── Badges ── */
+.badge{
+  display:inline-flex;align-items:center;padding:3px 9px;
+  border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;
+}
+.b-high{background:#fdf2f2;color:var(--red)}
+.b-medium{background:var(--amber-lt);color:var(--amber)}
+.b-low{background:var(--green-lt);color:var(--green)}
+.b-tag{background:var(--cream2);color:var(--muted)}
+
+/* ── Form ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-grid.g3{grid-template-columns:1fr 1fr 1fr}
+.f-full{grid-column:1/-1}
+.field{margin-bottom:0}
+label.lbl{
+  display:block;font-size:10px;font-weight:600;color:var(--muted);
+  letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px;
+}
+input,select,textarea{
+  width:100%;padding:10px 13px;
+  border:1.5px solid var(--cream3);border-radius:9px;
+  font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);
+  background:var(--white);outline:none;transition:border-color .2s;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+textarea{resize:vertical;min-height:76px}
+
+/* radio toggle */
+.rtog{display:flex;gap:8px}
+.rtog-opt{
+  flex:1;border:1.5px solid var(--cream3);border-radius:9px;
+  padding:9px 8px;text-align:center;cursor:pointer;
+  font-size:12px;font-weight:500;color:var(--muted);transition:all .18s;
+}
+.rtog-opt:hover{border-color:var(--gold-lt)}
+.rtog-opt.sel{border-color:var(--gold);background:#fffbf4;color:var(--gold)}
+
+/* ── Buttons ── */
+.btn{
+  padding:9px 18px;border:none;border-radius:9px;
+  font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .18s;
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+}
+.btn-primary{background:var(--navy);color:var(--white)}
+.btn-primary:hover{background:var(--navy2);transform:translateY(-1px)}
+.btn-gold{background:var(--gold);color:var(--navy)}
+.btn-gold:hover{background:var(--gold-lt)}
+.btn-danger{background:var(--red-lt);color:var(--red);border:1px solid #f5c6c6}
+.btn-danger:hover{background:var(--red);color:var(--white)}
+.btn-ghost{background:var(--cream2);color:var(--text);border:1px solid var(--cream3)}
+.btn-ghost:hover{background:var(--cream3)}
+.btn-sm{padding:6px 13px;font-size:12px}
+
+/* filter pills */
+.pills{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.pill{
+  padding:5px 14px;border-radius:20px;border:1.5px solid var(--cream3);
+  background:var(--white);font-size:12px;font-weight:500;color:var(--muted);
+  cursor:pointer;transition:all .18s;
+}
+.pill.active{background:var(--navy);color:var(--white);border-color:var(--navy)}
+
+/* select row */
+.sel-row{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.sel-row label{font-size:12px;color:var(--muted);font-weight:500;white-space:nowrap}
+.sel-row select{width:200px}
+
+/* predicted result */
+.pred-box{
+  background:linear-gradient(135deg,var(--navy),var(--navy2));
+  border-radius:14px;padding:24px;text-align:center;
+  color:var(--white);margin-top:16px;display:none;
+}
+.pred-box.show{display:block;animation:pIn .3s ease}
+.pred-label{font-size:12px;color:rgba(255,255,255,0.5);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px}
+.pred-value{font-family:'Playfair Display',serif;font-size:32px;color:var(--gold-lt)}
+
+/* ── Toast ── */
+#toast{
+  position:fixed;bottom:24px;right:24px;z-index:999;
+  padding:13px 20px;border-radius:11px;font-size:13px;font-weight:500;
+  color:var(--white);box-shadow:0 8px 24px rgba(0,0,0,0.2);
+  transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;
+}
+#toast.show{transform:translateY(0);opacity:1}
+#toast.ok{background:var(--green)}
+#toast.err{background:var(--red)}
+#toast.info{background:var(--navy)}
+
+/* empty */
+.empty{text-align:center;padding:40px;color:var(--muted)}
+.empty-icon{font-size:36px;margin-bottom:10px}
+.empty p{font-size:13px}
+
+/* expand section */
+.exp-section{
+  background:var(--cream);border:1.5px dashed var(--cream3);
+  border-radius:12px;padding:20px;margin-bottom:16px;display:none;
+}
+.exp-section.open{display:block;animation:pIn .25s ease}
+</style>
+</head>
+<body>
+
+<!-- ── Sidebar ── -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-icon"><svg viewBox="0 0 24 24"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg></div>
+    <span class="sb-name">Care<span>free</span></span>
+  </div>
+  <div class="sb-user">
+    <div class="sb-uname" id="sb-name">Caretaker</div>
+    <div class="sb-urole">Caretaker Panel</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Overview</div>
+    <div class="sb-item active" data-p="dashboard" onclick="nav('dashboard')"><span class="em">🏠</span>Dashboard</div>
+    <div class="sb-section">Patient Management</div>
+    <div class="sb-item" data-p="patients" onclick="nav('patients')"><span class="em">👥</span>Patients</div>
+    <div class="sb-item" data-p="patinfo" onclick="nav('patinfo')"><span class="em">📋</span>Patient Information</div>
+    <div class="sb-item" data-p="tasks" onclick="nav('tasks')"><span class="em">✅</span>Task Manager</div>
+    <div class="sb-item" data-p="appointments" onclick="nav('appointments')"><span class="em">📅</span>Appointments</div>
+    <div class="sb-item" data-p="expenses" onclick="nav('expenses')"><span class="em">💰</span>Expense Tracker</div>
+    <div class="sb-section">AI Predictions</div>
+    <div class="sb-item" data-p="stress" onclick="nav('stress')"><span class="em">🧠</span>Stress Predictor</div>
+    <div class="sb-item" data-p="cost" onclick="nav('cost')"><span class="em">📊</span>Cost Predictor</div>
+  </nav>
+  <div class="sb-footer">
+    <button class="btn-logout" onclick="logout()">← Sign Out</button>
+  </div>
+</aside>
+
+<!-- ── Main ── -->
+<div class="main">
+  <header class="header">
+    <div class="h-title" id="h-title">Dashboard</div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <div class="h-search"><span>🔍</span><input id="gsearch" placeholder="Search patients…" oninput="filterPats()"/></div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ── Dashboard ── -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="stats">
+        <div class="stat"><div class="stat-num" id="st-pats">0</div><div class="stat-lbl">Total Patients</div><div class="stat-bar"><div class="stat-bar-fill" id="sb-pats"></div></div></div>
+        <div class="stat"><div class="stat-num" id="st-tasks">—</div><div class="stat-lbl">Open Tasks</div><div class="stat-bar"><div class="stat-bar-fill" style="background:var(--green)"></div></div></div>
+        <div class="stat"><div class="stat-num" id="st-appts">—</div><div class="stat-lbl">Appointments</div><div class="stat-bar"><div class="stat-bar-fill" style="background:var(--navy)"></div></div></div>
+        <div class="stat"><div class="stat-num" id="st-exps">—</div><div class="stat-lbl">Expenses Logged</div><div class="stat-bar"><div class="stat-bar-fill" style="background:var(--amber)"></div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><div class="card-ttl">Patients Under Your Care</div><button class="btn btn-ghost btn-sm" onclick="nav('patients')">View All →</button></div>
+        <div class="tbl-wrap"><table id="dash-tbl">
+          <thead><tr><th>ID</th><th>Name</th><th>Guardian</th><th>Contact</th><th>Balance</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── Patients ── -->
+    <div class="panel" id="panel-patients">
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-ttl">Patients Managed by You</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-gold btn-sm" onclick="openAddPat()">+ Add Patient</button>
+            <button class="btn btn-danger btn-sm" onclick="removeSelectedPat()">Remove Selected</button>
+          </div>
+        </div>
+        <div class="tbl-wrap"><table id="pat-tbl">
+          <thead><tr><th>Patient ID</th><th>Name</th><th>Guardian Name</th><th>Contact</th><th>Balance</th><th>Notes</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── Patient Information ── -->
+    <div class="panel" id="panel-patinfo">
+      <div class="card">
+        <div class="card-hd">
+          <div class="card-ttl" id="pi-title">Patient Information</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-gold btn-sm" onclick="savePat()">💾 Save Patient</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearPatForm()">Clear</button>
+          </div>
+        </div>
+        <div style="margin-bottom:14px">
+          <label class="lbl">Select existing patient to edit (or fill form below for new)</label>
+          <select id="pi-sel" onchange="loadPatIntoForm()" style="max-width:300px">
+            <option value="">— New Patient —</option>
+          </select>
+        </div>
+        <div class="form-grid">
+          <div class="field"><label class="lbl">Patient Name</label><input id="pi-name" placeholder="Full name"/></div>
+          <div class="field"><label class="lbl">Age</label><input id="pi-age" type="number" placeholder="e.g. 45"/></div>
+          <div class="field"><label class="lbl">Height (cm)</label><input id="pi-height" type="number" placeholder="170"/></div>
+          <div class="field"><label class="lbl">Weight (kg)</label><input id="pi-weight" type="number" placeholder="70"/></div>
+          <div class="field"><label class="lbl">Children</label><input id="pi-children" type="number" placeholder="0"/></div>
+          <div class="field">
+            <label class="lbl">Region</label>
+            <select id="pi-region"><option value="northeast">Northeast</option><option value="northwest">Northwest</option><option value="southeast">Southeast</option><option value="southwest">Southwest</option></select>
+          </div>
+          <div class="field">
+            <label class="lbl">Gender</label>
+            <div class="rtog">
+              <div class="rtog-opt" onclick="setR('gender','Male',this)">Male</div>
+              <div class="rtog-opt" onclick="setR('gender','Female',this)">Female</div>
+            </div>
+          </div>
+          <div class="field">
+            <label class="lbl">Smoker</label>
+            <div class="rtog">
+              <div class="rtog-opt" onclick="setR('smoker','Yes',this)">Yes</div>
+              <div class="rtog-opt" onclick="setR('smoker','No',this)">No</div>
+            </div>
+          </div>
+          <div class="field"><label class="lbl">Guardian Name</label><input id="pi-gname" placeholder="Guardian full name"/></div>
+          <div class="field"><label class="lbl">Guardian Contact</label><input id="pi-gcontact" placeholder="Phone number"/></div>
+          <div class="field f-full"><label class="lbl">Notes</label><textarea id="pi-notes" placeholder="Additional notes about the patient…"></textarea></div>
+        </div>
+        <!-- Cost Prediction inline -->
+        <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--cream3)">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <div style="font-size:13px;font-weight:600;color:var(--text)">Insurance Cost Prediction</div>
+            <button class="btn btn-navy btn-sm" style="background:var(--navy);color:#fff" onclick="predictCostFromPatInfo()">🔮 Predict Cost</button>
+          </div>
+          <div class="pred-box" id="pi-pred-box">
+            <div class="pred-label">Predicted Insurance Cost</div>
+            <div class="pred-value" id="pi-pred-val">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Tasks ── -->
+    <div class="panel" id="panel-tasks">
+      <div class="sel-row">
+        <label>Patient:</label>
+        <select id="t-patsel" onchange="loadTasks()"><option value="">— Select Patient —</option></select>
+        <div class="pills" style="margin:0">
+          <div class="pill active" onclick="setPillFilter('tasks','All',this)">All</div>
+          <div class="pill" onclick="setPillFilter('tasks','Today',this)">Today</div>
+          <div class="pill" onclick="setPillFilter('tasks','Weekly',this)">This Week</div>
+          <div class="pill" onclick="setPillFilter('tasks','Monthly',this)">This Month</div>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="toggleSec('task-form')">+ Add Task</button>
+      </div>
+      <div class="exp-section" id="task-form">
+        <div style="font-size:13px;font-weight:600;margin-bottom:14px;color:var(--text)">New Task</div>
+        <div class="form-grid">
+          <div class="field"><label class="lbl">Task Name</label><input id="tf-name" placeholder="e.g. Morning Medication"/></div>
+          <div class="field"><label class="lbl">Date & Time</label><input id="tf-time" type="datetime-local"/></div>
+          <div class="field"><label class="lbl">Frequency</label><select id="tf-freq"><option>Daily</option><option>Alternate Day</option><option>Weekly</option><option>Monthly</option></select></div>
+          <div class="field"><label class="lbl">Priority</label><select id="tf-pri"><option value="3">High</option><option value="2" selected>Medium</option><option value="1">Low</option></select></div>
+          <div class="field f-full"><label class="lbl">Description</label><textarea id="tf-desc" placeholder="Task details…"></textarea></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-primary btn-sm" onclick="addTask()">Add Task</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleSec('task-form')">Cancel</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap"><table id="task-tbl">
+          <thead><tr><th>Task</th><th>Date & Time</th><th>Frequency</th><th>Priority</th><th>Description</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── Appointments ── -->
+    <div class="panel" id="panel-appointments">
+      <div class="sel-row">
+        <label>Patient:</label>
+        <select id="a-patsel" onchange="loadAppts()"><option value="">— Select Patient —</option></select>
+        <div class="pills" style="margin:0">
+          <div class="pill active" onclick="setPillFilter('appts','All',this)">All</div>
+          <div class="pill" onclick="setPillFilter('appts','Today',this)">Today</div>
+          <div class="pill" onclick="setPillFilter('appts','Weekly',this)">This Week</div>
+          <div class="pill" onclick="setPillFilter('appts','Monthly',this)">This Month</div>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="toggleSec('appt-form')">+ Add Appointment</button>
+      </div>
+      <div class="exp-section" id="appt-form">
+        <div style="font-size:13px;font-weight:600;margin-bottom:14px">New Appointment</div>
+        <div class="form-grid">
+          <div class="field"><label class="lbl">Appointment Name</label><input id="af-name" placeholder="Client / doctor name"/></div>
+          <div class="field"><label class="lbl">Date & Time</label><input id="af-time" type="datetime-local"/></div>
+          <div class="field"><label class="lbl">Category</label><select id="af-cat"><option>Consultation</option><option>Follow-up</option><option>Medical Test</option><option>Therapy</option><option>Emergency</option></select></div>
+          <div class="field f-full"><label class="lbl">Description</label><textarea id="af-desc" placeholder="Details…"></textarea></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-primary btn-sm" onclick="addAppt()">Add Appointment</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleSec('appt-form')">Cancel</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap"><table id="appt-tbl">
+          <thead><tr><th>Name</th><th>Category</th><th>Date & Time</th><th>Description</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── Expenses ── -->
+    <div class="panel" id="panel-expenses">
+      <div class="sel-row">
+        <label>Patient:</label>
+        <select id="e-patsel" onchange="loadExps()"><option value="">— Select Patient —</option></select>
+        <button class="btn btn-gold btn-sm" onclick="toggleSec('exp-form')">+ Add Expense</button>
+      </div>
+      <div class="exp-section" id="exp-form">
+        <div style="font-size:13px;font-weight:600;margin-bottom:14px">New Expense</div>
+        <div class="form-grid g3">
+          <div class="field"><label class="lbl">Expense Name</label><input id="ef-name" placeholder="e.g. Medication"/></div>
+          <div class="field"><label class="lbl">Amount (Rs.)</label><input id="ef-amt" type="number" placeholder="0.00" min="0" step="0.01"/></div>
+          <div class="field"><label class="lbl">Category</label><select id="ef-cat"><option>Medication</option><option>Laboratory Tests</option><option>Procedures & Surgery</option><option>Hospitalization</option><option>Emergency</option></select></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-primary btn-sm" onclick="addExp()">Add Expense</button>
+          <button class="btn btn-ghost btn-sm" onclick="toggleSec('exp-form')">Cancel</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="tbl-wrap"><table id="exp-tbl">
+          <thead><tr><th>Name</th><th>Category</th><th>Amount</th><th>Date</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── Stress Predictor ── -->
+    <div class="panel" id="panel-stress">
+      <div class="card" style="max-width:620px">
+        <div class="card-hd"><div class="card-ttl">🧠 Stress Level Predictor</div></div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:20px">Answer the following to deduce your patient's stress level</p>
+        <div class="form-grid">
+          <div class="field"><label class="lbl">Sleep Hours Today</label><input id="s-sleep" type="number" placeholder="7" min="0" max="24"/></div>
+          <div class="field"><label class="lbl">Sleep Quality (1–10)</label><input id="s-qual" type="number" placeholder="7" min="1" max="10"/></div>
+          <div class="field"><label class="lbl">Blood Pressure — Systolic</label><input id="s-sys" type="number" placeholder="120"/></div>
+          <div class="field"><label class="lbl">Blood Pressure — Diastolic</label><input id="s-dia" type="number" placeholder="80"/></div>
+          <div class="field"><label class="lbl">Physical Activity Level (1–100)</label><input id="s-act" type="number" placeholder="50" min="1" max="100"/></div>
+          <div class="field"><label class="lbl">Daily Steps</label><input id="s-steps" type="number" placeholder="8000"/></div>
+          <div class="field"><label class="lbl">Heart Rate (bpm)</label><input id="s-hr" type="number" placeholder="72"/></div>
+          <div class="field"><label class="lbl">BMI Category</label><select id="s-bmi"><option>Normal</option><option>Overweight</option><option>Obese</option></select></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="doStress()">Make Stress Level Prediction</button>
+        <div class="pred-box" id="stress-box">
+          <div class="pred-label">Predicted Stress Level</div>
+          <div class="pred-value" id="stress-val">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Cost Predictor ── -->
+    <div class="panel" id="panel-cost">
+      <div class="card" style="max-width:620px">
+        <div class="card-hd"><div class="card-ttl">📊 Insurance Cost Predictor</div></div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:20px">Select a patient (auto-fills) or enter details manually. Result will be saved to the patient record.</p>
+        <div style="margin-bottom:16px">
+          <label class="lbl">Select Patient (optional)</label>
+          <select id="c-patsel" onchange="fillCostFromPat()" style="max-width:300px"><option value="">— Manual Entry —</option></select>
+        </div>
+        <div class="form-grid">
+          <div class="field"><label class="lbl">Age</label><input id="c-age" type="number" placeholder="35"/></div>
+          <div class="field"><label class="lbl">Sex</label><select id="c-sex"><option value="male">Male</option><option value="female">Female</option></select></div>
+          <div class="field"><label class="lbl">BMI</label><input id="c-bmi" type="number" step="0.1" placeholder="24.5"/></div>
+          <div class="field"><label class="lbl">Children</label><input id="c-children" type="number" placeholder="0"/></div>
+          <div class="field"><label class="lbl">Smoker</label><select id="c-smoker"><option value="no">No</option><option value="yes">Yes</option></select></div>
+          <div class="field"><label class="lbl">Region</label><select id="c-region"><option value="northeast">Northeast</option><option value="northwest">Northwest</option><option value="southeast">Southeast</option><option value="southwest">Southwest</option></select></div>
+        </div>
+        <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="doCost()">Make Insurance Cost Prediction</button>
+        <div class="pred-box" id="cost-box">
+          <div class="pred-label">Predicted Insurance Cost</div>
+          <div class="pred-value" id="cost-val">—</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<div id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+const CF = {
+  id:   sessionStorage.getItem('cf_id'),
+  name: sessionStorage.getItem('cf_name'),
+  role: sessionStorage.getItem('cf_role'),
+};
+if(!CF.id||CF.role!=='caretaker') window.location.href='/';
+document.getElementById('sb-name').textContent = CF.name||'Caretaker';
+
+let patients=[[], []][0]; // list
+let selPatId=null;
+const radio={gender:'',smoker:''};
+const filters={tasks:'All',appts:'All'};
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function toast(msg,type='ok'){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className=`show ${type}`;
+  clearTimeout(el._t); el._t=setTimeout(()=>el.className='',3200);
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+const titles={
+  dashboard:'Dashboard',patients:'Patient Management',patinfo:'Patient Information',
+  tasks:'Task Manager',appointments:'Appointments',expenses:'Expense Tracker',
+  stress:'Stress Level Predictor',cost:'Insurance Cost Predictor'
+};
+function nav(p){
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
+  document.getElementById('panel-'+p).classList.add('active');
+  document.querySelector(`[data-p="${p}"]`)?.classList.add('active');
+  document.getElementById('h-title').textContent=titles[p]||p;
+  if(p==='dashboard') loadDash();
+  if(p==='patients') loadPats();
+  if(p==='patinfo') loadPatInfo();
+}
+
+// ── Patients ──────────────────────────────────────────────────────────────────
+async function loadPats(){
+  const res=await fetch(`/api/patients/${CF.id}`);
+  patients=await res.json();
+  renderPatTbl(patients);
+  fillPatSelects(patients);
+}
+
+function renderPatTbl(list){
+  const tb=document.querySelector('#pat-tbl tbody');
+  if(!list.length){tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-icon">👥</div><p>No patients yet. Click "+ Add Patient" to get started.</p></div></td></tr>`;return}
+  tb.innerHTML=list.map(p=>`
+    <tr onclick="selPat(this,'${p.Patient_ID}')" style="cursor:pointer">
+      <td><code style="font-size:11px;background:var(--cream2);padding:2px 6px;border-radius:4px">${p.Patient_ID}</code></td>
+      <td><strong>${p.Patient_Name}</strong></td>
+      <td>${p.Guardian_Name||'—'}</td>
+      <td>${p.Guardian_Contact||'—'}</td>
+      <td>Rs. ${(p.Balance||0).toFixed(2)}</td>
+      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)">${p.Guardian_Comment||'—'}</td>
+    </tr>`).join('');
+}
+
+function filterPats(){
+  const q=document.getElementById('gsearch').value.toLowerCase();
+  renderPatTbl(patients.filter(p=>p.Patient_Name.toLowerCase().includes(q)||p.Patient_ID.toLowerCase().includes(q)));
+}
+
+function selPat(row,pid){
+  document.querySelectorAll('#pat-tbl tbody tr').forEach(r=>r.classList.remove('selected'));
+  row.classList.add('selected');
+  selPatId=pid;
+}
+
+function fillPatSelects(list){
+  ['pi-sel','t-patsel','a-patsel','e-patsel','c-patsel'].forEach(id=>{
+    const el=document.getElementById(id);
+    const first=el.options[0].outerHTML;
+    el.innerHTML=first+list.map(p=>`<option value="${p.Patient_ID}">${p.Patient_Name}</option>`).join('');
+  });
+}
+
+function openAddPat(){nav('patinfo');clearPatForm()}
+
+async function removeSelectedPat(){
+  if(!selPatId){toast('Select a patient row first','err');return}
+  if(!confirm('Delete this patient and all their data?')) return;
+  const r=await fetch(`/api/patient/${selPatId}`,{method:'DELETE'});
+  if(r.ok){toast('Patient removed');selPatId=null;loadPats()}
+}
+
+// ── Patient Information form ───────────────────────────────────────────────────
+function loadPatInfo(){
+  loadPats();
+  clearPatForm();
+}
+
+async function loadPatIntoForm(){
+  const pid=document.getElementById('pi-sel').value;
+  if(!pid){clearPatForm();return}
+  const r=await fetch(`/api/patient/${pid}`);
+  const p=await r.json();
+  document.getElementById('pi-name').value=p.Patient_Name||'';
+  document.getElementById('pi-age').value=p.Age||'';
+  document.getElementById('pi-height').value=p.Patient_Height||'';
+  document.getElementById('pi-weight').value=p.Patient_Weight||'';
+  document.getElementById('pi-children').value=p.Patient_Children||'';
+  document.getElementById('pi-region').value=(p.Patient_Region||'northeast').toLowerCase();
+  document.getElementById('pi-gname').value=p.Guardian_Name||'';
+  document.getElementById('pi-gcontact').value=p.Guardian_Contact||'';
+  document.getElementById('pi-notes').value=p.Guardian_Comment||'';
+  radio.gender=p.Patient_Gender||'';
+  radio.smoker=p.Patient_Smoker||'';
+  document.querySelectorAll('.rtog-opt').forEach(o=>{
+    const t=o.textContent.trim();
+    if(t===radio.gender||t===radio.smoker) o.classList.add('sel');
+    else o.classList.remove('sel');
+  });
+  document.getElementById('pi-title').textContent='Edit: '+p.Patient_Name;
+}
+
+function clearPatForm(){
+  ['pi-name','pi-age','pi-height','pi-weight','pi-children','pi-gname','pi-gcontact','pi-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('pi-region').value='northeast';
+  document.getElementById('pi-sel').value='';
+  document.getElementById('pi-title').textContent='Patient Information';
+  radio.gender='';radio.smoker='';
+  document.querySelectorAll('.rtog-opt').forEach(o=>o.classList.remove('sel'));
+}
+
+function setR(field,val,el){
+  radio[field]=val;
+  el.closest('.rtog').querySelectorAll('.rtog-opt').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+async function savePat(){
+  const pid=document.getElementById('pi-sel').value;
+  const body={
+    name:document.getElementById('pi-name').value.trim(),
+    age:parseInt(document.getElementById('pi-age').value)||0,
+    gender:radio.gender,smoker:radio.smoker,
+    height:parseFloat(document.getElementById('pi-height').value)||0,
+    weight:parseFloat(document.getElementById('pi-weight').value)||0,
+    children:parseInt(document.getElementById('pi-children').value)||0,
+    region:document.getElementById('pi-region').value,
+    guardian_name:document.getElementById('pi-gname').value.trim(),
+    guardian_contact:document.getElementById('pi-gcontact').value.trim(),
+    caretaker_id:CF.id,
+  };
+  if(!body.name){toast('Patient name is required','err');return}
+  if(!body.gender){toast('Please select a gender','err');return}
+  if(!body.smoker){toast('Please select smoker status','err');return}
+
+  let url='/api/patient',method='POST';
+  if(pid){url+=`/${pid}`;method='PUT';}
+  const r=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json();
+  if(!r.ok){toast(d.detail,'err');return}
+  if(d.guardian_password) toast(`✓ Patient added! Guardian PW: ${d.guardian_password}`, 'ok');
+  else toast('✓ Patient updated');
+
+  // save notes separately
+  const notes=document.getElementById('pi-notes').value.trim();
+  const finalPid=d.patient_id||pid;
+  if(notes&&finalPid){
+    await fetch(`/api/patient/${finalPid}/comment`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({patient_id:finalPid,comment:notes})});
+  }
+  loadPats(); clearPatForm();
+}
+
+// ── Tasks ─────────────────────────────────────────────────────────────────────
+async function loadTasks(){
+  const pid=document.getElementById('t-patsel').value;
+  const tb=document.querySelector('#task-tbl tbody');
+  if(!pid){tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-icon">✅</div><p>Select a patient to view their tasks.</p></div></td></tr>`;return}
+  const r=await fetch(`/api/tasks/${pid}?filter=${filters.tasks}`);
+  const tasks=await r.json();
+  if(!tasks.length){tb.innerHTML=`<tr><td colspan="6"><div class="empty"><div class="empty-icon">✅</div><p>No tasks found.</p></div></td></tr>`;return}
+  const pm={3:'high',2:'medium',1:'low'};
+  tb.innerHTML=tasks.map(t=>`<tr>
+    <td><strong>${t.Task_Name}</strong></td>
+    <td>${fdt(t.Task_Time)}</td>
+    <td>${t.Task_Frequency}</td>
+    <td><span class="badge b-${pm[t.Task_Priority]||'low'}">${['','Low','Medium','High'][t.Task_Priority]||t.Task_Priority}</span></td>
+    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.Task_Description||'—'}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="delTask(${t.Task_ID})">Remove</button></td>
+  </tr>`).join('');
+}
+
+async function addTask(){
+  const pid=document.getElementById('t-patsel').value;
+  if(!pid){toast('Select a patient first','err');return}
+  const body={
+    name:document.getElementById('tf-name').value.trim(),
+    time:document.getElementById('tf-time').value,
+    frequency:document.getElementById('tf-freq').value,
+    priority:parseInt(document.getElementById('tf-pri').value),
+    description:document.getElementById('tf-desc').value.trim(),
+    patient_id:pid,
+  };
+  if(!body.name||!body.time){toast('Name and time are required','err');return}
+  const r=await fetch('/api/task',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok){toast('Task added');toggleSec('task-form');loadTasks()}
+}
+
+async function delTask(id){
+  if(!confirm('Remove this task?'))return;
+  const r=await fetch(`/api/task/${id}`,{method:'DELETE'});
+  if(r.ok){toast('Task removed');loadTasks()}
+}
+
+// ── Appointments ───────────────────────────────────────────────────────────────
+async function loadAppts(){
+  const pid=document.getElementById('a-patsel').value;
+  const tb=document.querySelector('#appt-tbl tbody');
+  if(!pid){tb.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="empty-icon">📅</div><p>Select a patient to view appointments.</p></div></td></tr>`;return}
+  const r=await fetch(`/api/appointments/${pid}?filter=${filters.appts}`);
+  const appts=await r.json();
+  if(!appts.length){tb.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="empty-icon">📅</div><p>No appointments found.</p></div></td></tr>`;return}
+  tb.innerHTML=appts.map(a=>`<tr>
+    <td><strong>${a.Client_Name}</strong></td>
+    <td><span class="badge b-tag">${a.Appointment_Category}</span></td>
+    <td>${fdt(a.Appointment_DateTime)}</td>
+    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${a.Appointment_Description||'—'}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="delAppt(${a.Appointment_ID})">Remove</button></td>
+  </tr>`).join('');
+}
+
+async function addAppt(){
+  const pid=document.getElementById('a-patsel').value;
+  if(!pid){toast('Select a patient first','err');return}
+  const body={
+    client_name:document.getElementById('af-name').value.trim(),
+    datetime_val:document.getElementById('af-time').value,
+    category:document.getElementById('af-cat').value,
+    description:document.getElementById('af-desc').value.trim(),
+    patient_id:pid,
+  };
+  if(!body.client_name||!body.datetime_val){toast('Name and datetime required','err');return}
+  const r=await fetch('/api/appointment',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok){toast('Appointment added');toggleSec('appt-form');loadAppts()}
+}
+
+async function delAppt(id){
+  if(!confirm('Remove this appointment?'))return;
+  const r=await fetch(`/api/appointment/${id}`,{method:'DELETE'});
+  if(r.ok){toast('Appointment removed');loadAppts()}
+}
+
+// ── Expenses ──────────────────────────────────────────────────────────────────
+async function loadExps(){
+  const pid=document.getElementById('e-patsel').value;
+  const tb=document.querySelector('#exp-tbl tbody');
+  if(!pid){tb.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="empty-icon">💰</div><p>Select a patient to view expenses.</p></div></td></tr>`;return}
+  const r=await fetch(`/api/expenses/${pid}`);
+  const exps=await r.json();
+  if(!exps.length){tb.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="empty-icon">💰</div><p>No expenses logged.</p></div></td></tr>`;return}
+  tb.innerHTML=exps.map(e=>`<tr>
+    <td><strong>${e.Expense_Name}</strong></td>
+    <td><span class="badge b-tag">${e.Expense_Category}</span></td>
+    <td>Rs. ${parseFloat(e.Expense_Amount).toFixed(2)}</td>
+    <td>${fdt(e.Expense_Time)}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="delExp('${e.Expense_ID}')">Remove</button></td>
+  </tr>`).join('');
+}
+
+async function addExp(){
+  const pid=document.getElementById('e-patsel').value;
+  if(!pid){toast('Select a patient first','err');return}
+  const body={
+    name:document.getElementById('ef-name').value.trim(),
+    category:document.getElementById('ef-cat').value,
+    amount:parseFloat(document.getElementById('ef-amt').value)||0,
+    patient_id:pid,
+  };
+  if(!body.name||!body.amount){toast('Name and amount required','err');return}
+  const r=await fetch('/api/expense',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(r.ok){toast('Expense added');toggleSec('exp-form');loadExps()}
+}
+
+async function delExp(id){
+  if(!confirm('Remove this expense?'))return;
+  const r=await fetch(`/api/expense/${id}`,{method:'DELETE'});
+  if(r.ok){toast('Expense removed');loadExps()}
+}
+
+// ── Predictions ────────────────────────────────────────────────────────────────
+async function doStress(){
+  const body={
+    age:25,
+    sleep_duration:parseInt(document.getElementById('s-sleep').value)||7,
+    quality_of_sleep:parseInt(document.getElementById('s-qual').value)||7,
+    bmi_category:document.getElementById('s-bmi').value,
+    physical_activity:parseInt(document.getElementById('s-act').value)||30,
+    heart_rate:parseFloat(document.getElementById('s-hr').value)||72,
+    daily_steps:parseInt(document.getElementById('s-steps').value)||8000,
+    systolic:parseInt(document.getElementById('s-sys').value)||120,
+    diastolic:parseInt(document.getElementById('s-dia').value)||80,
+  };
+  const r=await fetch('/api/predict/stress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json();
+  document.getElementById('stress-val').textContent=d.stress_level;
+  document.getElementById('stress-box').classList.add('show');
+}
+
+async function doCost(){
+  const pid=document.getElementById('c-patsel').value||undefined;
+  const body={
+    age:parseInt(document.getElementById('c-age').value)||35,
+    sex:document.getElementById('c-sex').value,
+    bmi:parseFloat(document.getElementById('c-bmi').value)||25,
+    children:parseInt(document.getElementById('c-children').value)||0,
+    smoker:document.getElementById('c-smoker').value,
+    region:document.getElementById('c-region').value,
+  };
+  let url='/api/predict/cost';
+  if(pid) url+=`?patient_id=${pid}`;
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json();
+  document.getElementById('cost-val').textContent=`$${d.predicted_cost.toLocaleString()}`;
+  document.getElementById('cost-box').classList.add('show');
+}
+
+async function predictCostFromPatInfo(){
+  const pid=document.getElementById('pi-sel').value;
+  const body={
+    age:parseInt(document.getElementById('pi-age').value)||35,
+    sex:(radio.gender||'male').toLowerCase(),
+    bmi:computeBMI(),
+    children:parseInt(document.getElementById('pi-children').value)||0,
+    smoker:(radio.smoker||'no').toLowerCase(),
+    region:document.getElementById('pi-region').value,
+  };
+  let url='/api/predict/cost';
+  if(pid) url+=`?patient_id=${pid}`;
+  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const d=await r.json();
+  document.getElementById('pi-pred-val').textContent=`$${d.predicted_cost.toLocaleString()}`;
+  document.getElementById('pi-pred-box').classList.add('show');
+}
+
+function computeBMI(){
+  const h=parseFloat(document.getElementById('pi-height').value)||170;
+  const w=parseFloat(document.getElementById('pi-weight').value)||70;
+  return parseFloat((w/((h/100)**2)).toFixed(1));
+}
+
+async function fillCostFromPat(){
+  const pid=document.getElementById('c-patsel').value;
+  if(!pid)return;
+  const r=await fetch(`/api/patient/${pid}`);
+  const p=await r.json();
+  document.getElementById('c-age').value=p.Age||'';
+  document.getElementById('c-sex').value=(p.Patient_Gender||'male').toLowerCase();
+  document.getElementById('c-children').value=p.Patient_Children||0;
+  document.getElementById('c-smoker').value=(p.Patient_Smoker||'no').toLowerCase();
+  document.getElementById('c-region').value=(p.Patient_Region||'northeast').toLowerCase();
+  if(p.Patient_Height&&p.Patient_Weight){
+    const h=p.Patient_Height/100;
+    document.getElementById('c-bmi').value=(p.Patient_Weight/(h*h)).toFixed(1);
+  }
+}
+
+// ── Dashboard ──────────────────────────────────────────────────────────────────
+async function loadDash(){
+  const r=await fetch(`/api/patients/${CF.id}`);
+  patients=await r.json();
+  document.getElementById('st-pats').textContent=patients.length;
+  document.getElementById('sb-pats').style.width=Math.min(patients.length*10,100)+'%';
+  const tb=document.querySelector('#dash-tbl tbody');
+  if(!patients.length){
+    tb.innerHTML=`<tr><td colspan="5"><div class="empty"><div class="empty-icon">👥</div><p>No patients yet.</p></div></td></tr>`;
+  }else{
+    tb.innerHTML=patients.slice(0,6).map(p=>`<tr>
+      <td><code style="font-size:11px;background:var(--cream2);padding:2px 6px;border-radius:4px">${p.Patient_ID}</code></td>
+      <td><strong>${p.Patient_Name}</strong></td>
+      <td>${p.Guardian_Name||'—'}</td>
+      <td>${p.Guardian_Contact||'—'}</td>
+      <td>Rs. ${(p.Balance||0).toFixed(2)}</td>
+    </tr>`).join('');
+  }
+  fillPatSelects(patients);
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function fdt(s){
+  if(!s)return '—';
+  try{return new Date(s).toLocaleString('en-PK',{dateStyle:'medium',timeStyle:'short'})}catch{return s}
+}
+function toggleSec(id){
+  const el=document.getElementById(id);
+  el.classList.toggle('open');
+}
+function setPillFilter(type,val,el){
+  el.closest('.pills').querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  filters[type]=val;
+  if(type==='tasks')loadTasks();
+  if(type==='appts')loadAppts();
+}
+function logout(){sessionStorage.clear();window.location.href='/'}
+
+// Init
+loadDash();
+</script>
+</body>
+</html>

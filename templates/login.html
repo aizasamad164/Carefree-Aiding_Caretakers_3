@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Carefree — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0B1F3A;
+  --navy2:#162944;
+  --gold:#C8973A;
+  --gold-lt:#E8B85A;
+  --cream:#FAF7F2;
+  --cream2:#F0EBE0;
+  --text:#1A1A2E;
+  --muted:#7A8899;
+  --white:#FFFFFF;
+  --err:#C0392B;
+  --green:#2E7D5E;
+}
+html,body{height:100%;font-family:'Outfit',sans-serif}
+
+body{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;
+  background:var(--navy);
+  position:relative;overflow:hidden;
+}
+
+/* geometric background */
+.bg-geo{position:fixed;inset:0;z-index:0;overflow:hidden}
+.bg-geo::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 70% 20%, rgba(200,151,58,0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 10% 80%, rgba(46,125,94,0.08) 0%, transparent 50%),
+    linear-gradient(160deg,#0B1F3A 0%,#162944 50%,#0d2538 100%);
+}
+.geo-line{
+  position:absolute;border:1px solid rgba(200,151,58,0.07);border-radius:50%;
+  animation:spin linear infinite;
+}
+.geo-line:nth-child(1){width:600px;height:600px;top:-200px;right:-200px;animation-duration:40s}
+.geo-line:nth-child(2){width:400px;height:400px;bottom:-150px;left:-100px;animation-duration:60s;animation-direction:reverse}
+.geo-line:nth-child(3){width:200px;height:200px;top:30%;left:5%;animation-duration:30s;border-color:rgba(200,151,58,0.04)}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Card ── */
+.card{
+  position:relative;z-index:1;
+  width:min(440px,92vw);
+  background:var(--cream);
+  border-radius:24px;
+  overflow:hidden;
+  box-shadow:0 40px 100px rgba(0,0,0,0.5), 0 0 0 1px rgba(200,151,58,0.2);
+  animation:rise .7s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes rise{from{opacity:0;transform:translateY(50px) scale(.97)}to{opacity:1;transform:none}}
+
+.card-top{
+  background:var(--navy);
+  padding:32px 36px 28px;
+  position:relative;overflow:hidden;
+}
+.card-top::after{
+  content:'';position:absolute;right:-30px;top:-30px;
+  width:160px;height:160px;border-radius:50%;
+  background:rgba(200,151,58,0.08);
+}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+.brand-icon{
+  width:40px;height:40px;background:var(--gold);border-radius:10px;
+  display:grid;place-items:center;flex-shrink:0;
+}
+.brand-icon svg{width:22px;height:22px;fill:var(--navy)}
+.brand-name{
+  font-family:'Playfair Display',serif;
+  font-size:24px;color:var(--white);letter-spacing:-.3px;
+}
+.brand-name span{color:var(--gold)}
+.brand-tag{font-size:12px;color:rgba(255,255,255,0.4);letter-spacing:.5px;margin-left:52px}
+
+.card-body{padding:32px 36px}
+
+/* ── Views ── */
+.view{display:none}
+.view.active{display:block;animation:fadeSlide .3s ease}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.view-title{
+  font-family:'Playfair Display',serif;
+  font-size:21px;color:var(--text);margin-bottom:4px;
+}
+.view-sub{font-size:13px;color:var(--muted);margin-bottom:28px;line-height:1.5}
+
+/* ── Role cards ── */
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+.role-card{
+  border:2px solid var(--cream2);border-radius:16px;
+  padding:20px 14px;text-align:center;cursor:pointer;
+  background:var(--white);transition:all .22s;
+}
+.role-card:hover{border-color:var(--gold);box-shadow:0 4px 20px rgba(200,151,58,0.15);transform:translateY(-2px)}
+.role-card.sel{border-color:var(--gold);background:#fffbf4}
+.role-icon{font-size:30px;margin-bottom:8px;display:block}
+.role-label{font-size:14px;font-weight:600;color:var(--text)}
+.role-desc{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* ── OR divider ── */
+.or-row{display:flex;align-items:center;gap:12px;margin:20px 0}
+.or-row hr{flex:1;border:none;border-top:1px solid var(--cream2)}
+.or-row span{font-size:11px;color:var(--muted);white-space:nowrap}
+
+/* ── Form elements ── */
+.field{margin-bottom:16px}
+.field label{
+  display:block;font-size:11px;font-weight:600;
+  color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:7px;
+}
+.field input,.field select{
+  width:100%;padding:12px 14px;
+  border:2px solid var(--cream2);border-radius:10px;
+  font-family:'Outfit',sans-serif;font-size:14px;color:var(--text);
+  background:var(--white);outline:none;transition:border-color .2s;
+}
+.field input:focus,.field select:focus{border-color:var(--gold)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── Buttons ── */
+.btn{
+  width:100%;padding:13px;border:none;border-radius:11px;
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:600;
+  cursor:pointer;transition:all .2s;letter-spacing:.2px;
+}
+.btn-primary{background:var(--navy);color:var(--white)}
+.btn-primary:hover{background:#0f2a4a;box-shadow:0 6px 20px rgba(11,31,58,0.3);transform:translateY(-1px)}
+.btn-gold{background:var(--gold);color:var(--navy)}
+.btn-gold:hover{background:var(--gold-lt);transform:translateY(-1px)}
+.btn-ghost{background:var(--cream2);color:var(--text);margin-top:10px}
+.btn-ghost:hover{background:#e4ddd0}
+
+/* ── Error / success ── */
+.alert{
+  padding:11px 14px;border-radius:10px;font-size:13px;
+  margin-bottom:16px;display:none;line-height:1.5;
+}
+.alert.show{display:block}
+.alert-err{background:#fdf2f2;border:1px solid #f5c6c6;color:var(--err)}
+.alert-ok{background:#f0faf6;border:1px solid #a8dfc8;color:var(--green)}
+.alert-ok strong{display:block;margin-bottom:4px;font-size:14px}
+
+/* ── Back link ── */
+.back-link{
+  text-align:center;margin-top:18px;font-size:13px;color:var(--muted);
+}
+.back-link a{color:var(--gold);font-weight:600;cursor:pointer;text-decoration:none}
+.back-link a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="bg-geo">
+  <div class="geo-line"></div>
+  <div class="geo-line"></div>
+  <div class="geo-line"></div>
+</div>
+
+<div class="card">
+  <div class="card-top">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+      </div>
+      <span class="brand-name">Care<span>free</span></span>
+    </div>
+    <div class="brand-tag">Aiding Caretakers</div>
+  </div>
+
+  <div class="card-body">
+
+    <!-- View 1: Choose Role -->
+    <div class="view active" id="v-role">
+      <div class="view-title">Welcome back</div>
+      <div class="view-sub">Select your role to continue</div>
+      <div class="roles">
+        <div class="role-card" onclick="pickRole('caretaker',this)">
+          <span class="role-icon">🩺</span>
+          <div class="role-label">Caretaker</div>
+          <div class="role-desc">Manage patients & tasks</div>
+        </div>
+        <div class="role-card" onclick="pickRole('guardian',this)">
+          <span class="role-icon">👨‍👩‍👧</span>
+          <div class="role-label">Guardian</div>
+          <div class="role-desc">View patient updates</div>
+        </div>
+      </div>
+      <div class="or-row"><hr/><span>New caretaker?</span><hr/></div>
+      <button class="btn btn-ghost" onclick="show('v-signup')" style="margin-top:0">Create an account →</button>
+    </div>
+
+    <!-- View 2: Sign In -->
+    <div class="view" id="v-signin">
+      <div class="view-title" id="si-title">Sign In</div>
+      <div class="view-sub" id="si-sub">Enter your credentials</div>
+      <div class="alert alert-err" id="si-err"></div>
+      <div class="field"><label>Username</label><input id="si-user" placeholder="Your username" autocomplete="username"/></div>
+      <div class="field"><label>Password</label><input id="si-pass" type="password" placeholder="••••••••" autocomplete="current-password"/></div>
+      <button class="btn btn-primary" onclick="doSignIn()">Sign In</button>
+      <div class="back-link"><a onclick="show('v-role')">← Change role</a></div>
+    </div>
+
+    <!-- View 3: Sign Up -->
+    <div class="view" id="v-signup">
+      <div class="view-title">Create Account</div>
+      <div class="view-sub">Register as a new caretaker</div>
+      <div class="alert alert-err" id="su-err"></div>
+      <div class="alert alert-ok" id="su-ok"></div>
+      <div class="field"><label>Full Name</label><input id="su-name" placeholder="Your full name"/></div>
+      <div class="row2">
+        <div class="field"><label>Age</label><input id="su-age" type="number" placeholder="28" min="18" max="80"/></div>
+        <div class="field"><label>Gender</label>
+          <select id="su-gender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Contact Number</label><input id="su-contact" placeholder="03xxxxxxxxx"/></div>
+      <div class="field"><label>Skills / Specialisation</label><input id="su-skills" placeholder="e.g. Elderly Care, Physiotherapy"/></div>
+      <button class="btn btn-gold" onclick="doSignUp()">Create Account</button>
+      <div class="back-link"><a onclick="show('v-role')">← Back to login</a></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let currentRole = '';
+
+function show(id){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function pickRole(role, el){
+  currentRole = role;
+  document.querySelectorAll('.role-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('si-title').textContent = role==='caretaker'?'Caretaker Sign In':'Guardian Sign In';
+  document.getElementById('si-sub').textContent   = role==='caretaker'?'Access your patient dashboard':'Enter your guardian name & patient password';
+  setTimeout(()=>show('v-signin'),120);
+}
+
+async function doSignIn(){
+  const u=document.getElementById('si-user').value.trim();
+  const p=document.getElementById('si-pass').value.trim();
+  const err=document.getElementById('si-err');
+  err.classList.remove('show');
+  if(!u||!p){err.textContent='Please fill in all fields.';err.classList.add('show');return}
+  if(!currentRole){err.textContent='Please select a role first.';err.classList.add('show');return}
+  try{
+    const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({username:u,password:p,role:currentRole})});
+    const d=await r.json();
+    if(!r.ok){err.textContent=d.detail;err.classList.add('show');return}
+    if(d.role==='caretaker'){
+      sessionStorage.setItem('cf_role','caretaker');
+      sessionStorage.setItem('cf_id',d.id);
+      sessionStorage.setItem('cf_name',d.name);
+      window.location.href='/caretaker';
+    }else{
+      sessionStorage.setItem('cf_role','guardian');
+      sessionStorage.setItem('cf_pid',d.patient_id);
+      sessionStorage.setItem('cf_name',d.name);
+      window.location.href='/guardian';
+    }
+  }catch{err.textContent='Cannot connect to server.';err.classList.add('show')}
+}
+
+async function doSignUp(){
+  const err=document.getElementById('su-err');
+  const ok =document.getElementById('su-ok');
+  err.classList.remove('show');ok.classList.remove('show');
+  const name=document.getElementById('su-name').value.trim();
+  const age =document.getElementById('su-age').value;
+  const gen =document.getElementById('su-gender').value;
+  const con =document.getElementById('su-contact').value.trim();
+  const ski =document.getElementById('su-skills').value.trim();
+  if(!name||!age||!gen||!con||!ski){err.textContent='Please fill in all fields.';err.classList.add('show');return}
+  try{
+    const r=await fetch('/api/signup',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name,age:parseInt(age),gender:gen,contact:con,skills:ski})});
+    const d=await r.json();
+    if(!r.ok){err.textContent=d.detail;err.classList.add('show');return}
+    ok.innerHTML=`<strong>✓ Account Created!</strong>Caretaker ID: <b>${d.caretaker_id}</b><br>Password: <b>${d.password}</b><br><small style="color:var(--muted)">Save these credentials before proceeding.</small>`;
+    ok.classList.add('show');
+  }catch{err.textContent='Cannot connect to server.';err.classList.add('show')}
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter')return;
+  const a=document.querySelector('.view.active');
+  if(a.id==='v-signin')doSignIn();
+  if(a.id==='v-signup')doSignUp();
+});
+</script>
+</body>
+</html>
