@@ -1,69 +1,71 @@
-# Carefree — Oracle Edition
+# Carefree — Modular Oracle Edition
 
-## Files
+## Folder Structure
 ```
 carefree/
-├── app.py                               ← Backend (never needs editing)
-├── config.py                            ← YOUR Oracle settings (edit this)
+├── main.py                              ← starts the app
+├── config.py                            ← YOUR settings (only file to edit)
+├── database.py                          ← Oracle connection
+├── models.py                            ← all data schemas
+├── ml_models.py                         ← stress + cost ML
 ├── requirements.txt
+├── config.example.py                    ← safe template for GitHub
 ├── Sleep_health_and_lifestyle_dataset.csv
 ├── insurance.csv
 ├── static/
-└── templates/
-    ├── login.html
-    ├── caretaker.html
-    └── guardian.html
+├── templates/
+│   ├── login.html
+│   ├── caretaker.html
+│   └── guardian.html
+└── routes/
+    ├── __init__.py
+    ├── auth.py                          ← login, signup
+    ├── patients.py                      ← patient CRUD
+    ├── tasks.py                         ← task CRUD
+    ├── appointments.py                  ← appointment CRUD
+    ├── expenses.py                      ← expense CRUD
+    ├── notifications.py                 ← notification CRUD
+    └── predictions.py                   ← ML predictions
 ```
 
-## Step 1 — Edit config.py
-Open config.py and fill in your Oracle details:
+## Setup
+
+### Step 1 — Edit config.py
 ```python
-DB_HOST     = "localhost"    # or IP address of Oracle server
+USE_CLOUD   = False         # True for Oracle Cloud
+DB_HOST     = "localhost"
 DB_PORT     = 1521
-DB_SERVICE  = "XE"           # your SID or service name
-DB_USER     = "system"       # your Oracle username
-DB_PASSWORD = "yourpassword" # your Oracle password
-DB_MODE     = "SID"          # "SID" or "SERVICE_NAME"
+DB_SERVICE  = "XEPDB1"
+DB_USER     = "carefree"
+DB_PASSWORD = "carefree123"
+DB_MODE     = "SERVICE_NAME"
 ```
 
-## Step 2 — Install Oracle Instant Client
-cx_Oracle needs Oracle Instant Client installed.
-Download from: https://www.oracle.com/database/technologies/instant-client/downloads.html
-Choose the version matching your Oracle DB.
+### Step 2 — Create Oracle tables manually
+Run your SQL scripts in SQLPlus before starting the app.
 
-## Step 3 — Install Python dependencies
+### Step 3 — Install dependencies
 ```cmd
 cd D:\carefree
 C:\Users\Dr.C\AppData\Local\Programs\Python\Python39\python.exe -m pip install -r requirements.txt
 ```
 
-## Step 4 — Run
+### Step 4 — Run
 ```cmd
-C:\Users\Dr.C\AppData\Local\Programs\Python\Python39\python.exe -m uvicorn app:app --reload
+C:\Users\Dr.C\AppData\Local\Programs\Python\Python39\python.exe -m uvicorn main:app --reload
 ```
+Note: command is now `main:app` not `app:app`
 
-## Step 5 — Open browser
-```
-http://localhost:8000
-```
+## URLs
+| URL | Page |
+|-----|------|
+| http://localhost:8000 | Login |
+| http://localhost:8000/caretaker | Caretaker Dashboard |
+| http://localhost:8000/guardian | Guardian Portal |
+| http://localhost:8000/docs | API Docs |
 
-## Default Login
-- Username: admin
-- Password: admin123
-- Role: Caretaker
-
-## Oracle Tables Created Automatically
-- Caretaker
-- Patient
-- Task
-- Appointment
-- Expenses
-
-## On Another Desktop
-Only change config.py with that computer's Oracle connection details.
-Everything else stays the same.
-
-## API Docs
-```
-http://localhost:8000/docs
-```
+## Adding a new feature
+1. Add schema to `models.py`
+2. Create `routes/yourfeature.py`
+3. Register in `main.py`: `app.include_router(yourfeature.router)`
+4. Done!
