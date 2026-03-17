@@ -2,3 +2,5 @@ __pycache__/
 carefree.db 
 config.py 
 .vs/
+carefree.db
+config.py
