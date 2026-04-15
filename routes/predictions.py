@@ -44,7 +44,7 @@ def predict_cost(d: CostReq, patient_id: Optional[str]=None, db=Depends(get_db))
     # Optionally save to patient record
     if patient_id:
         cur = db.cursor()
-        cur.execute("UPDATE Patient SET Charges=:1 WHERE Patient_ID=:2",
+        cur.execute("UPDATE Patient SET Charges=:1 WHERE PatientID=:2",
                     (pred, patient_id))
         db.commit()
 
