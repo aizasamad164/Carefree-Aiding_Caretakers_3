@@ -1,362 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Carefree — Guardian</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --navy:#0B1F3A;--navy2:#162944;
-  --gold:#C8973A;--gold-lt:#E8B85A;
-  --cream:#FAF7F2;--cream2:#F0EBE0;--cream3:#E8E0D2;
-  --text:#1A1A2E;--muted:#7A8899;--white:#fff;
-  --green:#2E7D5E;--green-lt:#e8f5ef;
-  --red:#C0392B;--red-lt:#fdf2f2;
-  --sidebar:220px;--header:60px;
-}
-*{font-family:'Outfit',sans-serif;font-size:14px}
-html,body{height:100%}
-body{background:var(--cream);color:var(--text);display:flex}
-
-.sidebar{
-  width:var(--sidebar);flex-shrink:0;background:var(--navy);
-  position:fixed;top:0;left:0;height:100vh;
-  display:flex;flex-direction:column;z-index:100;
-  border-right:1px solid rgba(200,151,58,0.15);
-}
-.sb-logo{padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:10px}
-.sb-icon{width:34px;height:34px;background:var(--gold);border-radius:9px;display:grid;place-items:center;flex-shrink:0}
-.sb-icon svg{width:18px;height:18px;fill:var(--navy)}
-.sb-name{font-family:'Playfair Display',serif;font-size:19px;color:var(--white)}
-.sb-name span{color:var(--gold)}
-.sb-user{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,0.06)}
-.sb-uname{font-size:13px;font-weight:600;color:var(--white);margin-bottom:2px}
-.sb-urole{font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:.8px;text-transform:uppercase}
-
-.sb-nav{flex:1;padding:10px 12px}
-.sb-item{
-  display:flex;align-items:center;gap:9px;
-  padding:10px 12px;border-radius:9px;
-  color:rgba(255,255,255,0.5);font-size:13px;font-weight:500;
-  cursor:pointer;transition:all .18s;margin-bottom:1px;
-}
-.sb-item:hover{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.85)}
-.sb-item.active{background:rgba(200,151,58,0.15);color:var(--gold-lt);border-left:2px solid var(--gold)}
-.sb-item .em{font-size:15px;width:20px;text-align:center;flex-shrink:0}
-
-.sb-footer{padding:14px;border-top:1px solid rgba(255,255,255,0.06)}
-.btn-logout{width:100%;padding:9px;border:1px solid rgba(255,255,255,0.12);background:transparent;border-radius:8px;color:rgba(255,255,255,0.5);font-family:'Outfit',sans-serif;font-size:12px;cursor:pointer;transition:all .2s}
-.btn-logout:hover{background:rgba(255,255,255,0.07);color:var(--white)}
-
-.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh}
-.header{height:var(--header);background:var(--white);border-bottom:1px solid var(--cream3);padding:0 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
-.h-title{font-family:'Playfair Display',serif;font-size:19px;color:var(--navy)}
-.h-badge{background:var(--green-lt);color:var(--green);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
-
-.content{flex:1;padding:26px 28px;overflow-y:auto}
-
-.panel{display:none}
-.panel.active{display:block;animation:pIn .25s ease}
-@keyframes pIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-
-/* ── Patient Info grid ── */
-.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
-.info-item{background:var(--white);border:1px solid var(--cream3);border-radius:12px;padding:16px}
-.info-lbl{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px}
-.info-val{font-size:15px;font-weight:600;color:var(--navy);font-family:'Playfair Display',serif}
-
-/* ── Balance card ── */
-.balance-hero{
-  background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 60%,#0f2a4a 100%);
-  border-radius:18px;padding:28px 32px;color:var(--white);
-  margin-bottom:18px;position:relative;overflow:hidden;
-}
-.balance-hero::before{
-  content:'';position:absolute;right:-50px;top:-50px;
-  width:200px;height:200px;border-radius:50%;
-  background:rgba(200,151,58,0.1);
-}
-.balance-hero::after{
-  content:'';position:absolute;right:30px;bottom:-60px;
-  width:150px;height:150px;border-radius:50%;
-  background:rgba(200,151,58,0.05);
-}
-.bal-lbl{font-size:11px;color:rgba(255,255,255,0.5);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px}
-.bal-amt{font-family:'Playfair Display',serif;font-size:42px;color:var(--white);margin-bottom:4px}
-.bal-sub{font-size:12px;color:rgba(255,255,255,0.4)}
-.bal-gold{color:var(--gold-lt)}
-
-/* ── Add funds row ── */
-.add-funds{display:flex;gap:10px;align-items:flex-end;margin-bottom:18px}
-.add-funds input{
-  width:200px;padding:10px 13px;
-  border:1.5px solid var(--cream3);border-radius:9px;
-  font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);
-  background:var(--white);outline:none;transition:border-color .2s;
-}
-.add-funds input:focus{border-color:var(--gold)}
-
-/* ── Table ── */
-.card{background:var(--white);border:1px solid var(--cream3);border-radius:16px;padding:22px;margin-bottom:18px}
-.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
-.card-ttl{font-size:14px;font-weight:600;color:var(--text)}
-.tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th{text-align:left;padding:9px 13px;font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-bottom:2px solid var(--cream3)}
-td{padding:11px 13px;border-bottom:1px solid var(--cream);color:var(--text);vertical-align:middle}
-tr:last-child td{border:none}
-tbody tr:hover td{background:var(--cream)}
-
-.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600}
-.b-tag{background:var(--cream2);color:var(--muted)}
-
-/* ── Pills ── */
-.pills{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
-.pill{padding:5px 14px;border-radius:20px;border:1.5px solid var(--cream3);background:var(--white);font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .18s}
-.pill.active{background:var(--navy);color:var(--white);border-color:var(--navy)}
-
-/* ── Query area ── */
-.field{margin-bottom:14px}
-label.lbl{display:block;font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px}
-textarea{width:100%;padding:12px 14px;border:1.5px solid var(--cream3);border-radius:9px;font-family:'Outfit',sans-serif;font-size:13px;color:var(--text);background:var(--white);outline:none;transition:border-color .2s;resize:vertical;min-height:100px}
-textarea:focus{border-color:var(--gold)}
-
-/* ── Buttons ── */
-.btn{padding:9px 18px;border:none;border-radius:9px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .18s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.btn-primary{background:var(--navy);color:var(--white)}
-.btn-primary:hover{background:var(--navy2);transform:translateY(-1px)}
-.btn-gold{background:var(--gold);color:var(--navy)}
-.btn-gold:hover{background:var(--gold-lt)}
-.btn-ghost{background:var(--cream2);color:var(--text);border:1px solid var(--cream3)}
-.btn-ghost:hover{background:var(--cream3)}
-.btn-sm{padding:6px 13px;font-size:12px}
-
-#toast{position:fixed;bottom:24px;right:24px;z-index:999;padding:13px 20px;border-radius:11px;font-size:13px;font-weight:500;color:var(--white);box-shadow:0 8px 24px rgba(0,0,0,0.2);transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none}
-#toast.show{transform:translateY(0);opacity:1}
-#toast.ok{background:var(--green)}
-#toast.err{background:var(--red)}
-
-.empty{text-align:center;padding:40px;color:var(--muted)}
-.empty-icon{font-size:36px;margin-bottom:10px}
-.empty p{font-size:13px}
-</style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Carefree — Guardian</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/guardian.css" />
 </head>
 <body>
 
-<aside class="sidebar">
-  <div class="sb-logo">
-    <div class="sb-icon"><svg viewBox="0 0 24 24"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg></div>
-    <span class="sb-name">Care<span>free</span></span>
-  </div>
-  <div class="sb-user">
-    <div class="sb-uname" id="sb-name">Guardian</div>
-    <div class="sb-urole">Guardian Portal</div>
-  </div>
-  <nav class="sb-nav">
-    <div class="sb-item active" data-p="info" onclick="nav('info')"><span class="em">👤</span>Patient Information</div>
-    <div class="sb-item" data-p="appointments" onclick="nav('appointments')"><span class="em">📅</span>Appointments</div>
-    <div class="sb-item" data-p="finances" onclick="nav('finances')"><span class="em">💰</span>Expenses & Finances</div>
-    <div class="sb-item" data-p="query" onclick="nav('query')"><span class="em">💬</span>Send Query</div>
-  </nav>
-  <div class="sb-footer">
-    <button class="btn-logout" onclick="logout()">← Sign Out</button>
-  </div>
-</aside>
-
-<div class="main">
-  <header class="header">
-    <div class="h-title" id="h-title">Patient Information</div>
-    <div class="h-badge" id="h-badge">Guardian View</div>
-  </header>
-
-  <div class="content">
-
-    <!-- ── Patient Information ── -->
-    <div class="panel active" id="panel-info">
-      <div class="card">
-        <div class="card-hd">
-          <div class="card-ttl" id="pi-name-hd">Patient Profile</div>
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+        <div class="sb-logo">
+            <div class="sb-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z" /></svg>
+            </div>
+            <span class="sb-name">Care<span>free</span></span>
         </div>
-        <div class="info-grid" id="info-grid">
-          <!-- populated by JS -->
+        <div class="sb-user">
+            <div class="sb-uname" id="sb-name">Guardian</div>
+            <div class="sb-urole">Guardian Portal</div>
         </div>
-      </div>
-    </div>
-
-    <!-- ── Appointments ── -->
-    <div class="panel" id="panel-appointments">
-      <div class="pills">
-        <div class="pill active" onclick="apptF('All',this)">All</div>
-        <div class="pill" onclick="apptF('Today',this)">Today</div>
-        <div class="pill" onclick="apptF('Weekly',this)">This Week</div>
-        <div class="pill" onclick="apptF('Monthly',this)">This Month</div>
-      </div>
-      <div class="card">
-        <div class="card-hd"><div class="card-ttl">Scheduled Appointments</div></div>
-        <div class="tbl-wrap"><table id="appt-tbl">
-          <thead><tr><th>Name</th><th>Category</th><th>Date & Time</th><th>Description</th></tr></thead>
-          <tbody></tbody>
-        </table></div>
-      </div>
-    </div>
-
-    <!-- ── Finances ── -->
-    <div class="panel" id="panel-finances">
-      <div class="balance-hero">
-        <div class="bal-lbl">Current Balance</div>
-        <div class="bal-amt" id="bal-amt">Rs. 0.00</div>
-        <div class="bal-sub">Available for medical expenses • Total Charges: <span class="bal-gold" id="bal-charges">Rs. 0.00</span></div>
-      </div>
-      <div class="card">
-        <div class="card-hd"><div class="card-ttl">Add Funds</div></div>
-        <div class="add-funds">
-          <div>
-            <label class="lbl">Amount (Rs.)</label>
-            <input type="number" id="funds-input" placeholder="Enter amount…" min="1"/>
-          </div>
-          <button class="btn btn-gold" onclick="sendBalance()">Send Balance →</button>
+        <nav class="sb-nav">
+            <div class="sb-item active" data-p="info" onclick="nav('info')">        <span class="em">👤</span>Patient Information</div>
+            <div class="sb-item" data-p="appointments" onclick="nav('appointments')"><span class="em">📅</span>Appointments</div>
+            <div class="sb-item" data-p="finances" onclick="nav('finances')">    <span class="em">💰</span>Expenses & Finances</div>
+            <div class="sb-item" data-p="query" onclick="nav('query')">       <span class="em">💬</span>Send Query</div>
+        </nav>
+        <div class="sb-footer">
+            <button class="btn-logout" onclick="logout()">← Sign Out</button>
         </div>
-      </div>
-      <div class="card">
-        <div class="card-hd"><div class="card-ttl">Expense History</div></div>
-        <div class="tbl-wrap"><table id="exp-tbl">
-          <thead><tr><th>Name</th><th>Category</th><th>Amount</th><th>Date</th></tr></thead>
-          <tbody></tbody>
-        </table></div>
-      </div>
-    </div>
+    </aside>
 
-    <!-- ── Query ── -->
-    <div class="panel" id="panel-query">
-      <div class="card" style="max-width:580px">
-        <div class="card-hd"><div class="card-ttl">Send a Query to Caretaker</div></div>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6">Leave a message or query for your patient's caretaker. They will see it in the patient's profile under "Notes".</p>
-        <div class="field">
-          <label class="lbl">Your Message</label>
-          <textarea id="query-txt" rows="6" placeholder="Type your query or message here…"></textarea>
-        </div>
-        <button class="btn btn-primary" onclick="sendQuery()">Send Query →</button>
-      </div>
-    </div>
+    <!-- ── Main ── -->
+    <div class="main">
+        <header class="header">
+            <div class="h-title" id="h-title">Patient Information</div>
+            <div class="h-badge" id="h-badge">Guardian View</div>
+        </header>
 
-  </div>
-</div>
+        <div class="content">
 
-<div id="toast"></div>
+            <!-- ── Patient Information ── -->
+            <div class="panel active" id="panel-info">
+                <div class="card">
+                    <div class="card-hd">
+                        <div class="card-ttl" id="pi-name-hd">Patient Profile</div>
+                    </div>
+                    <!-- Populated by loadPatInfo() in guardian.js -->
+                    <div class="info-grid" id="info-grid"></div>
+                </div>
+            </div>
 
-<script>
-const PID  = sessionStorage.getItem('cf_pid');
-const NAME = sessionStorage.getItem('cf_name');
-const ROLE = sessionStorage.getItem('cf_role');
-if(!PID||ROLE!=='guardian') window.location.href='/';
-document.getElementById('sb-name').textContent = NAME||'Guardian';
-document.getElementById('h-badge').textContent  = NAME||'Guardian';
+            <!-- ── Appointments ── -->
+            <div class="panel" id="panel-appointments">
+                <div class="pills">
+                    <div class="pill active" onclick="apptF('All',this)">All</div>
+                    <div class="pill" onclick="apptF('Today',this)">Today</div>
+                    <div class="pill" onclick="apptF('Weekly',this)">This Week</div>
+                    <div class="pill" onclick="apptF('Monthly',this)">This Month</div>
+                </div>
+                <div class="card">
+                    <div class="card-hd">
+                        <div class="card-ttl">Scheduled Appointments</div>
+                    </div>
+                    <div class="tbl-wrap">
+                        <!-- doctor_name + specialization replace old client_name -->
+                        <!-- status column added -->
+                        <table id="appt-tbl">
+                            <thead>
+                                <tr>
+                                    <th>Doctor</th>
+                                    <th>Category</th>
+                                    <th>Date & Time</th>
+                                    <th>Status</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-function toast(msg,type='ok'){
-  const el=document.getElementById('toast');
-  el.textContent=msg; el.className=`show ${type}`;
-  clearTimeout(el._t); el._t=setTimeout(()=>el.className='',3200);
-}
+            <!-- ── Finances ── -->
+            <div class="panel" id="panel-finances">
+                <div class="balance-hero">
+                    <div class="bal-lbl">Current Balance</div>
+                    <div class="bal-amt" id="bal-amt">Rs. 0.00</div>
+                    <div class="bal-sub">
+                        Available for medical expenses •
+                        Total Charges: <span class="bal-gold" id="bal-charges">Rs. 0.00</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-hd"><div class="card-ttl">Add Funds</div></div>
+                    <div class="add-funds">
+                        <div>
+                            <label class="lbl">Amount (Rs.)</label>
+                            <input type="number" id="funds-input" placeholder="Enter amount…" min="1" />
+                        </div>
+                        <button class="btn btn-gold" onclick="sendBalance()">Send Balance →</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-hd"><div class="card-ttl">Expense History</div></div>
+                    <div class="tbl-wrap">
+                        <table id="exp-tbl">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-const titles={info:'Patient Information',appointments:'Appointments',finances:'Expenses & Finances',query:'Send Query'};
-function nav(p){
-  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
-  document.querySelectorAll('.sb-item').forEach(x=>x.classList.remove('active'));
-  document.getElementById('panel-'+p).classList.add('active');
-  document.querySelector(`[data-p="${p}"]`)?.classList.add('active');
-  document.getElementById('h-title').textContent=titles[p];
-  if(p==='appointments') loadAppts('All');
-  if(p==='finances') loadFinances();
-}
+            <!-- ── Send Query ── -->
+            <div class="panel" id="panel-query">
+                <div class="card" style="max-width:580px">
+                    <div class="card-hd"><div class="card-ttl">Send a Query to Caretaker</div></div>
+                    <p style="font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6">
+                        Leave a message or query for your patient's caretaker.
+                        They will see it in the patient's profile under "Notes".
+                    </p>
+                    <div class="field">
+                        <label class="lbl">Your Message</label>
+                        <textarea id="query-txt" rows="6" placeholder="Type your query or message here…"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="sendQuery()">Send Query →</button>
+                </div>
+            </div>
 
-async function loadPatInfo(){
-  const r=await fetch(`/api/patient/${PID}`);
-  const p=await r.json();
-  document.getElementById('pi-name-hd').textContent=p.Patient_Name||'Patient Profile';
-  const fields=[
-    ['Patient ID',p.Patient_ID],['Name',p.Patient_Name],['Age',p.Age],
-    ['Gender',p.Patient_Gender],['Height',p.Patient_Height?p.Patient_Height+' cm':'—'],
-    ['Weight',p.Patient_Weight?p.Patient_Weight+' kg':'—'],
-    ['Smoker',p.Patient_Smoker],['Children',p.Patient_Children],
-    ['Region',p.Patient_Region],['Guardian',p.Guardian_Name],
-    ['Contact',p.Guardian_Contact],['Notes',p.Guardian_Comment||'None'],
-  ];
-  document.getElementById('info-grid').innerHTML=fields.map(([k,v])=>`
-    <div class="info-item">
-      <div class="info-lbl">${k}</div>
-      <div class="info-val" style="font-size:${k==='Notes'?'13':'15'}px">${v||'—'}</div>
-    </div>`).join('');
-  // prefill query
-  document.getElementById('query-txt').value=p.Guardian_Comment||'';
-}
+        </div><!-- /content -->
+    </div><!-- /main -->
 
-let curApptFilter='All';
-async function loadAppts(filter){
-  curApptFilter=filter;
-  const r=await fetch(`/api/appointments/${PID}?filter=${filter}`);
-  const appts=await r.json();
-  const tb=document.querySelector('#appt-tbl tbody');
-  if(!appts.length){tb.innerHTML=`<tr><td colspan="4"><div class="empty"><div class="empty-icon">📅</div><p>No appointments found.</p></div></td></tr>`;return}
-  tb.innerHTML=appts.map(a=>`<tr>
-    <td><strong>${a.Client_Name}</strong></td>
-    <td><span class="badge b-tag">${a.Appointment_Category}</span></td>
-    <td>${fdt(a.Appointment_DateTime)}</td>
-    <td>${a.Appointment_Description||'—'}</td>
-  </tr>`).join('');
-}
+    <div id="toast"></div>
 
-function apptF(f,btn){
-  document.querySelectorAll('.pills .pill').forEach(p=>p.classList.remove('active'));
-  btn.classList.add('active');
-  loadAppts(f);
-}
-
-async function loadFinances(){
-  const r=await fetch(`/api/patient/${PID}`);
-  const p=await r.json();
-  document.getElementById('bal-amt').textContent=`Rs. ${(p.Balance||0).toFixed(2)}`;
-  document.getElementById('bal-charges').textContent=`Rs. ${(p.Charges||0).toFixed(2)}`;
-  const exr=await fetch(`/api/expenses/${PID}`);
-  const exps=await exr.json();
-  const tb=document.querySelector('#exp-tbl tbody');
-  if(!exps.length){tb.innerHTML=`<tr><td colspan="4"><div class="empty"><div class="empty-icon">💰</div><p>No expenses recorded yet.</p></div></td></tr>`;return}
-  tb.innerHTML=exps.map(e=>`<tr>
-    <td><strong>${e.Expense_Name}</strong></td>
-    <td><span class="badge b-tag">${e.Expense_Category}</span></td>
-    <td>Rs. ${parseFloat(e.Expense_Amount).toFixed(2)}</td>
-    <td>${fdt(e.Expense_Time)}</td>
-  </tr>`).join('');
-}
-
-async function sendBalance(){
-  const amt=parseFloat(document.getElementById('funds-input').value);
-  if(!amt||amt<=0){toast('Enter a valid amount','err');return}
-  const r=await fetch(`/api/patient/${PID}/balance`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({patient_id:PID,amount:amt})});
-  const d=await r.json();
-  if(r.ok){
-    document.getElementById('bal-amt').textContent=`Rs. ${d.balance.toFixed(2)}`;
-    document.getElementById('funds-input').value='';
-    toast(`✓ Rs. ${amt.toFixed(2)} sent successfully`);
-  }
-}
-
-async function sendQuery(){
-  const msg=document.getElementById('query-txt').value.trim();
-  if(!msg){toast('Please write a message first','err');return}
-  const r=await fetch(`/api/patient/${PID}/comment`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({patient_id:PID,comment:msg})});
-  if(r.ok) toast('✓ Query sent to caretaker');
-  else toast('Failed to send query','err');
-}
-
-function fdt(s){
-  if(!s)return'—';
-  try{return new Date(s).toLocaleString('en-PK',{dateStyle:'medium',timeStyle:'short'})}catch{return s}
-}
-function logout(){sessionStorage.clear();window.location.href='/'}
-
-loadPatInfo();
-</script>
+    <script src="/static/js/guardian.js"></script>
 </body>
 </html>

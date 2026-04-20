@@ -36,12 +36,33 @@ function renderPatTbl(list) {
 
 function filterPats() {
     const q = document.getElementById('gsearch').value.toLowerCase();
-    renderPatTbl(patients.filter(p =>
+    const filtered = patients.filter(p =>
         p.patient_name.toLowerCase().includes(q) ||
         p.patient_id.toLowerCase().includes(q)
-    ));
-}
+    );
 
+    // ── Filter patients panel table ──
+    renderPatTbl(filtered);
+
+    // ── Filter dashboard mini table too ──
+    const dashTb = document.querySelector('#dash-tbl tbody');
+    if (dashTb) {
+        if (!filtered.length) {
+            dashTb.innerHTML = `<tr><td colspan="4"><div class="empty">
+                <div class="empty-icon">👥</div>
+                <p>No patients match your search.</p>
+            </div></td></tr>`;
+        } else {
+            dashTb.innerHTML = filtered.slice(0, 6).map(p => `
+                <tr>
+                    <td><code style="font-size:11px;background:var(--cream2);padding:2px 6px;border-radius:4px">${p.patient_id}</code></td>
+                    <td><strong>${p.patient_name}</strong></td>
+                    <td>${p.guardian_name || '—'}</td>
+                    <td>${p.guardian_contact || '—'}</td>
+                </tr>`).join('');
+        }
+    }
+}
 function selPat(row, pid) {
     document.querySelectorAll('#pat-tbl tbody tr').forEach(r => r.classList.remove('selected'));
     row.classList.add('selected');
@@ -66,7 +87,13 @@ function loadPatInfo() {
 
 async function loadPatIntoForm() {
     const pid = document.getElementById('pi-sel').value;
-    if (!pid) { clearPatForm(); return }
+    const pwSection = document.getElementById('pi-pw-section');
+
+    if (!pid) {
+        clearPatForm();
+        pwSection.style.display = 'none'; // Hide if no patient selected
+        return;
+    }
 
     const r = await fetch(`/api/patient/${pid}`);
     const p = await r.json();
@@ -93,8 +120,10 @@ async function loadPatIntoForm() {
         if (t === radio.gender || t === radio.smoker) o.classList.add('sel');
         else o.classList.remove('sel');
     });
-
+    document.getElementById('pi-pw-section').style.display = 'block';
     document.getElementById('pi-title').textContent = 'Edit: ' + p.patient_name;
+
+    pwSection.style.display = 'block'; // Show only when data is loaded
 }
 
 function clearPatForm() {
@@ -118,25 +147,35 @@ function setR(field, val, el) {
 async function savePat() {
     const pid = document.getElementById('pi-sel').value;
 
+    // 1. Properly capture values for validation
+    const pName = document.getElementById('pi-name').value.trim();
+    const gName = document.getElementById('pi-gname').value.trim();
+    const age = document.getElementById('pi-age').value;
+    const height = document.getElementById('pi-height').value;
+    const weight = document.getElementById('pi-weight').value;
+    const gContact = document.getElementById('pi-gcontact').value.trim();
+
+    // 2. STOPS the process if required fields are missing
+    // Note: We check radio.gender and radio.smoker because they are stored in that global object
+    if (!pName || !gName || !age || !height || !weight || !radio.gender || !radio.smoker || !gContact) {
+        toast('Please fill in all required fields (Name, Age, Stats, and Guardian info)', 'err');
+        return;
+    }
+
     const body = {
-        name: document.getElementById('pi-name').value.trim(),
-        age: parseInt(document.getElementById('pi-age').value) || 0,
+        name: pName,
+        age: parseInt(age) || 0,
         gender: radio.gender,
         smoker: radio.smoker,
-        height: parseFloat(document.getElementById('pi-height').value) || 0,
-        weight: parseFloat(document.getElementById('pi-weight').value) || 0,
+        height: parseFloat(height) || 0,
+        weight: parseFloat(weight) || 0,
         children: parseInt(document.getElementById('pi-children').value) || 0,
         region: document.getElementById('pi-region').value,
-        guardian_name: document.getElementById('pi-gname').value.trim(),
-        guardian_contact: document.getElementById('pi-gcontact').value.trim(),
+        guardian_name: gName,
+        guardian_contact: gContact,
         relation_with_patient: document.getElementById('pi-grelation').value.trim(),
-        // caretaker_id only needed on POST (create), not PUT (update)
         ...(pid ? {} : { caretaker_id: CF.id }),
     };
-
-    if (!body.name) { toast('Patient name is required', 'err'); return }
-    if (!body.gender) { toast('Please select a gender', 'err'); return }
-    if (!body.smoker) { toast('Please select smoker status', 'err'); return }
 
     const url = pid ? `/api/patient/${pid}` : '/api/patient';
     const method = pid ? 'PUT' : 'POST';
@@ -146,27 +185,73 @@ async function savePat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
     });
-    const d = await r.json();
-    if (!r.ok) { toast(d.detail, 'err'); return }
 
+    const d = await r.json();
+    if (!r.ok) { toast(d.detail || 'Save failed', 'err'); return; }
+
+    // 3. Logic for Toast: Only show password if it's a new patient (POST)
     if (d.guardian_password) {
         toast(`✓ Patient added! Guardian PW: ${d.guardian_password}`, 'ok');
     } else {
-        toast('✓ Patient updated');
+        toast('✓ Patient information updated', 'ok');
     }
 
-    // Save notes (guardian comment) separately via its own endpoint
-    // CommentBody no longer takes patient_id in body — it's in the URL
+    // 4. Save notes (CommentBody)
     const notes = document.getElementById('pi-notes').value.trim();
     const finalPid = d.patient_id || pid;
     if (notes && finalPid) {
         await fetch(`/api/patient/${finalPid}/comment`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ comment: notes })  // patient_id removed from body
+            body: JSON.stringify({ comment: notes })
         });
     }
 
     loadPats();
     clearPatForm();
 }
+
+async function showGuardianPassword() {
+    const pid = document.getElementById('pi-sel').value;
+
+    // DEBUG: Check if we actually have a Patient ID
+    if (!pid) {
+        console.error("No Patient ID selected in the dropdown.");
+        toast('Please select a patient from the list first', 'err');
+        return;
+    }
+
+    try {
+        console.log(`Fetching password for: ${pid}`);
+        const res = await fetch(`/api/patient/${pid}/password`);
+
+        // Handle 404 or 500 errors
+        if (!res.ok) {
+            const errorData = await res.json();
+            console.error("Server Error:", errorData);
+            toast(errorData.detail || 'Could not retrieve password', 'err');
+            return;
+        }
+
+        const data = await res.json();
+
+        // Final check for the password string
+        if (data && data.password) {
+            alert(`Guardian Password for this patient:\n\n${data.password}`);
+        } else {
+            toast('Password field is empty in database', 'err');
+        }
+    } catch (err) {
+        console.error("Network/JS Error:", err);
+        toast('Connection error. Check console (F12)', 'err');
+    }
+}
+
+// Add this at the very end of patients.js
+window.showGuardianPassword = showGuardianPassword;
+
+document.addEventListener('click', function (e) {
+    if (e.target && e.target.id === 'show-pw-btn') {
+        showGuardianPassword();
+    }
+});

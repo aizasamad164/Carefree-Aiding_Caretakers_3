@@ -31,7 +31,7 @@ function toast(msg, type = 'ok') {
     el.textContent = msg;
     el.className = `show ${type}`;
     clearTimeout(el._t);
-    el._t = setTimeout(() => el.className = '', 3200);
+    el._t = setTimeout(() => el.className = '', 10000);
 }
 
 
@@ -105,6 +105,7 @@ function nav(p) {
     if (p === 'appointments') {
         document.getElementById('a-patsel').value = '';
         loadAppts();
+        loadDoctorsForDropdown();
     }
     if (p === 'expenses') {
         document.getElementById('e-patsel').value = '';

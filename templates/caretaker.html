@@ -183,15 +183,13 @@
                         <div class="field"><label class="lbl">Relation to Patient</label><input id="pi-grelation" placeholder="e.g. Father, Mother, Sibling" /></div>
                         <div class="field f-full"><label class="lbl">Notes</label><textarea id="pi-notes" placeholder="Additional notes…"></textarea></div>
                     </div>
-                    <!-- Cost Prediction inline -->
-                    <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--cream3)">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-                            <div style="font-size:13px;font-weight:600">Insurance Cost Prediction</div>
-                            <button class="btn btn-primary btn-sm" onclick="predictCostFromPatInfo()">🔮 Predict Cost</button>
-                        </div>
-                        <div class="pred-box" id="pi-pred-box">
-                            <div class="pred-label">Predicted Insurance Cost</div>
-                            <div class="pred-value" id="pi-pred-val">—</div>
+                    <!-- Guardian Pssword -->
+                    <div id="pi-pw-section" style="margin-top:18px;padding-top:18px;border-top:1px solid var(--cream3); display: block;">
+                        <div style="display:flex;align-items:center;justify-content:space-between">
+                            <div style="font-size:13px;font-weight:600">Guardian Access</div>
+                            <button id="show-pw-btn" type="button" class="btn btn-primary btn-sm">
+                                🔑 Show Password
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -251,10 +249,13 @@
             </div>
 
             <!-- ── Appointments ── -->
+            <!-- ── Appointments ── -->
             <div class="panel" id="panel-appointments">
                 <div class="sel-row">
                     <label>Patient:</label>
-                    <select id="a-patsel" onchange="loadAppts()"><option value="">— Select Patient —</option></select>
+                    <select id="a-patsel" onchange="loadAppts()">
+                        <option value="">— Select Patient —</option>
+                    </select>
                     <div class="pills" style="margin:0">
                         <div class="pill active" onclick="setPillFilter('appts','All',this)">All</div>
                         <div class="pill" onclick="setPillFilter('appts','Today',this)">Today</div>
@@ -263,13 +264,33 @@
                     </div>
                     <button class="btn btn-gold btn-sm" onclick="toggleSec('appt-form')">+ Add Appointment</button>
                 </div>
+
                 <div class="exp-section" id="appt-form">
                     <div style="font-size:13px;font-weight:600;margin-bottom:14px">New Appointment</div>
                     <div class="form-grid">
-                        <!-- client_name replaced by doctor_name + specialization -->
-                        <div class="field"><label class="lbl">Doctor Name</label><input id="af-doctor" placeholder="Dr. full name" /></div>
-                        <div class="field"><label class="lbl">Specialization</label><input id="af-spec" placeholder="e.g. Cardiologist" /></div>
-                        <div class="field"><label class="lbl">Date & Time</label><input id="af-time" type="datetime-local" /></div>
+
+                        <div class="field f-full">
+                            <label class="lbl">Select Existing Doctor</label>
+                            <select id="af-doc-select" onchange="onDoctorSelect()" style="width:100%">
+                                <option value="NEW">-- Add New Doctor --</option>
+                            </select>
+                        </div>
+
+                        <div class="field">
+                            <label class="lbl">Doctor Name</label>
+                            <input id="af-doctor" placeholder="Dr. full name" />
+                        </div>
+
+                        <div class="field">
+                            <label class="lbl">Specialization</label>
+                            <input id="af-spec" placeholder="e.g. Cardiologist" />
+                        </div>
+
+                        <div class="field">
+                            <label class="lbl">Date & Time</label>
+                            <input id="af-time" type="datetime-local" />
+                        </div>
+
                         <div class="field">
                             <label class="lbl">Category</label>
                             <select id="af-cat">
@@ -280,18 +301,31 @@
                                 <option>Emergency</option>
                             </select>
                         </div>
-                        <div class="field f-full"><label class="lbl">Description</label><textarea id="af-desc" placeholder="Details…"></textarea></div>
+
+                        <div class="field f-full">
+                            <label class="lbl">Description</label>
+                            <textarea id="af-desc" placeholder="Details…"></textarea>
+                        </div>
                     </div>
                     <div style="display:flex;gap:8px;margin-top:10px">
                         <button class="btn btn-primary btn-sm" onclick="addAppt()">Add Appointment</button>
                         <button class="btn btn-ghost btn-sm" onclick="toggleSec('appt-form')">Cancel</button>
                     </div>
                 </div>
+
                 <div class="card">
                     <div class="tbl-wrap">
-                        <!-- Status column added -->
                         <table id="appt-tbl">
-                            <thead><tr><th>Doctor</th><th>Category</th><th>Date & Time</th><th>Status</th><th>Description</th><th></th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th>Doctor</th>
+                                    <th>Category</th>
+                                    <th>Date & Time</th>
+                                    <th>Status</th>
+                                    <th>Description</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
                             <tbody></tbody>
                         </table>
                     </div>

@@ -4,56 +4,58 @@ from models import MealCreate, MealUpdate
 
 router = APIRouter()
 
+
 # ── Create tables if not exist ────────────────────────────────────────────────
-def create_meal_tables(db):
-    cur = db.cursor()
+#def create_meal_tables(db):
+#    cur = db.cursor()
 
-    cur.execute("""
-        BEGIN
-            EXECUTE IMMEDIATE '
-                CREATE TABLE Meal (
-                    MealID      VARCHAR2(20)    PRIMARY KEY,
-                    Name        VARCHAR2(100)   NOT NULL,
-                    Flag        VARCHAR2(20)    DEFAULT ''OK'',
-                    PlanID      VARCHAR2(20)    REFERENCES DietaryPlan(PlanID)
-                )
-            ';
-        EXCEPTION WHEN OTHERS THEN
-            IF SQLCODE != -955 THEN RAISE; END IF;
-        END;
-    """)
+#    cur.execute("""
+#        BEGIN
+#            EXECUTE IMMEDIATE '
+#                CREATE TABLE Meal (
+#                    MealID      VARCHAR2(20)    PRIMARY KEY,
+#                    Name        VARCHAR2(100)   NOT NULL,
+#                    Flag        VARCHAR2(20)    DEFAULT ''OK'',
+#                    PlanID      VARCHAR2(20)    REFERENCES DietaryPlan(PlanID)
+#                )
+#            ';
+#        EXCEPTION WHEN OTHERS THEN
+#            IF SQLCODE != -955 THEN RAISE; END IF;
+#        END;
+#    """)
 
-    cur.execute("""
-        BEGIN
-            EXECUTE IMMEDIATE '
-                CREATE TABLE MealIngredient (
-                    MealID      VARCHAR2(20)    REFERENCES Meal(MealID),
-                    Ingredient  VARCHAR2(100)   NOT NULL,
-                    CONSTRAINT pk_meal_ingredient PRIMARY KEY (MealID, Ingredient)
-                )
-            ';
-        EXCEPTION WHEN OTHERS THEN
-            IF SQLCODE != -955 THEN RAISE; END IF;
-        END;
-    """)
+#    cur.execute("""
+#        BEGIN
+#            EXECUTE IMMEDIATE '
+#                CREATE TABLE MealIngredient (
+#                    MealID      VARCHAR2(20)    REFERENCES Meal(MealID),
+#                    Ingredient  VARCHAR2(100)   NOT NULL,
+#                    CONSTRAINT pk_meal_ingredient PRIMARY KEY (MealID, Ingredient)
+#                )
+#            ';
+#        EXCEPTION WHEN OTHERS THEN
+#            IF SQLCODE != -955 THEN RAISE; END IF;
+#        END;
+#    """)
 
-    cur.execute("""
-        BEGIN
-            EXECUTE IMMEDIATE '
-                CREATE TABLE MealNutrition (
-                    MealID      VARCHAR2(20)    REFERENCES Meal(MealID),
-                    Nutrient    VARCHAR2(50)    NOT NULL,
-                    Value       NUMBER(8,2),
-                    CONSTRAINT pk_meal_nutrition PRIMARY KEY (MealID, Nutrient)
-                )
-            ';
-        EXCEPTION WHEN OTHERS THEN
-            IF SQLCODE != -955 THEN RAISE; END IF;
-        END;
-    """)
+#    cur.execute("""
+#        BEGIN
+#            EXECUTE IMMEDIATE '
+#                CREATE TABLE MealNutrition (
+#                    MealID      VARCHAR2(20)    REFERENCES Meal(MealID),
+#                    Nutrient    VARCHAR2(50)    NOT NULL,
+#                    Value       NUMBER(8,2),
+#                    CONSTRAINT pk_meal_nutrition PRIMARY KEY (MealID, Nutrient)
+#                )
+#            ';
+#        EXCEPTION WHEN OTHERS THEN
+#            IF SQLCODE != -955 THEN RAISE; END IF;
+#        END;
+#    """)
 
-    db.commit()
-    cur.close()
+#    db.commit()
+#    cur.close()
+#"""
 
 
 # ── Get all meals for a plan ──────────────────────────────────────────────────

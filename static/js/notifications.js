@@ -34,7 +34,7 @@ async function loadNotifs() {
 
         return `
         <div class="notif-item">
-            <button class="notif-del" onclick="delNotif('${n.notification_id}')">✕</button>
+            <button class="notif-del" onclick="dismissNotif('${n.notification_id}')">✕</button>
             ${context}
             <div class="notif-name">${n.notif_name}</div>
             <div class="notif-desc">${n.notif_description || '—'}</div>
@@ -66,6 +66,12 @@ async function addNotif() {
 async function delNotif(id) {
     const r = await fetch(`/api/notification/${id}`, { method: 'DELETE' });
     if (r.ok) { toast('Removed'); loadNotifs(); }
+}
+
+// ── Dismiss notification (marks sent + auto-reschedules recurring tasks) ──
+async function dismissNotif(id) {
+    await fetch(`/api/notification/dismiss/${id}`, { method: 'POST' });
+    loadNotifs();
 }
 
 function toggleNotif() {

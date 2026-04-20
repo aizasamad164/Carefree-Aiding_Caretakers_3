@@ -85,9 +85,3 @@ async function delTask(id) {
     if (r.ok) { toast('Task removed'); loadTasks(); }
 }
 
-// ── Refresh recurring tasks ───────────────────────────────────────────────────
-// Called on caretaker login — updates Task_Time for recurring tasks
-// and fires notifications for any tasks due today
-async function refreshTasks() {
-    await fetch(`/api/tasks/refresh/${CF.id}`, { method: 'POST' });
-}

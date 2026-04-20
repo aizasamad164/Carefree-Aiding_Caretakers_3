@@ -4,15 +4,15 @@
 
 async function loadDash() {
     const r = await fetch(`/api/patients/${CF.id}`);
-    patients = await r.json();
+    patients = await r.json();  // ← this must assign to the GLOBAL patients, not a local var
 
-    // Update stats
+    // ── Patient count ──
     document.getElementById('st-pats').textContent = patients.length;
     document.getElementById('sb-pats').style.width = Math.min(patients.length * 10, 100) + '%';
 
-    // Mini patient table — shows up to 6 patients
-    // Columns: ID, Name, Guardian Name, Guardian Contact
-    // Balance removed since it no longer exists on Patient table
+    // ... rest of your stats fetches unchanged ...
+
+    // ── Mini patient table ──
     const tb = document.querySelector('#dash-tbl tbody');
     if (!patients.length) {
         tb.innerHTML = `<tr><td colspan="4"><div class="empty">
@@ -27,7 +27,6 @@ async function loadDash() {
                 <td>${p.guardian_name || '—'}</td>
                 <td>${p.guardian_contact || '—'}</td>
             </tr>`).join('');
-        // guardian_name and guardian_contact come via JOIN in GET /api/patients/{cid}
     }
 
     fillPatSelects(patients);

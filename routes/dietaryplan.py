@@ -5,53 +5,53 @@ from models import DietaryPlanCreate, DietaryPlanUpdate
 router = APIRouter()
 
 # ── Create tables if not exist ────────────────────────────────────────────────
-def create_dietary_plan_tables(db):
-    cur = db.cursor()
+#def create_dietary_plan_tables(db):
+#    cur = db.cursor()
 
-    cur.execute("""
-        BEGIN
-            EXECUTE IMMEDIATE '
-                CREATE TABLE DietaryPlan (
-                    PlanID      VARCHAR2(20)    PRIMARY KEY,
-                    Duration    VARCHAR2(50),
-                    PatientID   VARCHAR2(20)    REFERENCES Patient(PatientID)
-                )
-            ';
-        EXCEPTION WHEN OTHERS THEN
-            IF SQLCODE != -955 THEN RAISE; END IF;
-        END;
-    """)
+#    cur.execute("""
+#        BEGIN
+#            EXECUTE IMMEDIATE '
+#                CREATE TABLE DietaryPlan (
+#                    PlanID      VARCHAR2(20)    PRIMARY KEY,
+#                    Duration    VARCHAR2(50),
+#                    PatientID   VARCHAR2(20)    REFERENCES Patient(PatientID)
+#                )
+#            ';
+#        EXCEPTION WHEN OTHERS THEN
+#            IF SQLCODE != -955 THEN RAISE; END IF;
+#        END;
+#    """)
 
-    cur.execute("""
-        BEGIN
-            EXECUTE IMMEDIATE '
-                CREATE TABLE DietaryGoal (
-                    PlanID      VARCHAR2(20)    REFERENCES DietaryPlan(PlanID),
-                    Goal        VARCHAR2(100)   NOT NULL,
-                    CONSTRAINT pk_dietary_goal PRIMARY KEY (PlanID, Goal)
-                )
-            ';
-        EXCEPTION WHEN OTHERS THEN
-            IF SQLCODE != -955 THEN RAISE; END IF;
-        END;
-    """)
+#    cur.execute("""
+#        BEGIN
+#            EXECUTE IMMEDIATE '
+#                CREATE TABLE DietaryGoal (
+#                    PlanID      VARCHAR2(20)    REFERENCES DietaryPlan(PlanID),
+#                    Goal        VARCHAR2(100)   NOT NULL,
+#                    CONSTRAINT pk_dietary_goal PRIMARY KEY (PlanID, Goal)
+#                )
+#            ';
+#        EXCEPTION WHEN OTHERS THEN
+#            IF SQLCODE != -955 THEN RAISE; END IF;
+#        END;
+#    """)
 
-    cur.execute("""
-        BEGIN
-            EXECUTE IMMEDIATE '
-                CREATE TABLE DietaryRestriction (
-                    PlanID          VARCHAR2(20)    REFERENCES DietaryPlan(PlanID),
-                    Restriction     VARCHAR2(100)   NOT NULL,
-                    CONSTRAINT pk_dietary_restriction PRIMARY KEY (PlanID, Restriction)
-                )
-            ';
-        EXCEPTION WHEN OTHERS THEN
-            IF SQLCODE != -955 THEN RAISE; END IF;
-        END;
-    """)
+#    cur.execute("""
+#        BEGIN
+#            EXECUTE IMMEDIATE '
+#                CREATE TABLE DietaryRestriction (
+#                    PlanID          VARCHAR2(20)    REFERENCES DietaryPlan(PlanID),
+#                    Restriction     VARCHAR2(100)   NOT NULL,
+#                    CONSTRAINT pk_dietary_restriction PRIMARY KEY (PlanID, Restriction)
+#                )
+#            ';
+#        EXCEPTION WHEN OTHERS THEN
+#            IF SQLCODE != -955 THEN RAISE; END IF;
+#        END;
+#    """)
 
-    db.commit()
-    cur.close()
+#    db.commit()
+#    cur.close()
 
 
 # ── Get all dietary plans for a patient ───────────────────────────────────────
