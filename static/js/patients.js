@@ -36,9 +36,10 @@ function renderPatTbl(list) {
 
 function filterPats() {
     const q = document.getElementById('gsearch').value.toLowerCase();
+
     const filtered = patients.filter(p =>
-        p.patient_name.toLowerCase().includes(q) ||
-        p.patient_id.toLowerCase().includes(q)
+        p.patient_name.toLowerCase().startsWith(q) ||
+        p.patient_id.toLowerCase().startsWith(q)
     );
 
     // ── Filter patients panel table ──
@@ -63,6 +64,7 @@ function filterPats() {
         }
     }
 }
+
 function selPat(row, pid) {
     document.querySelectorAll('#pat-tbl tbody tr').forEach(r => r.classList.remove('selected'));
     row.classList.add('selected');

@@ -15,7 +15,7 @@ CREATE TABLE Caretaker (
     Qualification       VARCHAR2(100)
 );
 
--- ── 2. CaretakerSkill (depends on Caretaker) ─────────
+-- ── 2. CaretakerSkill (depends on Caretaker) ───────── 
 CREATE TABLE CaretakerSkill (
     CaretakerID     VARCHAR2(20)    REFERENCES Caretaker(CaretakerID),
     Skill           VARCHAR2(100)   NOT NULL,
@@ -107,41 +107,53 @@ CREATE TABLE Expense (
 
 -- ── 10. Vitals (depends on Patient) ──────────────────
 CREATE TABLE Vitals (
-    VitalsID            NUMBER          GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    Recorded_Time       TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
-    Pulse_Rate          NUMBER(5,2),
-    BP_Systolic         NUMBER(5,2),
-    BP_Diastolic        NUMBER(5,2),
+    VitalsID        NUMBER          GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    Recorded_Time   TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
+    VitalsCategory  VARCHAR2(50),
+    PatientID       VARCHAR2(20)    REFERENCES Patient(PatientID)
+);
+
+-- ── 11. CardiacVitals (depends on Vitals) ────────────
+CREATE TABLE CardiacVitals (
+    VitalsID        NUMBER          PRIMARY KEY
+                    REFERENCES Vitals(VitalsID),
+    Pulse_Rate      NUMBER(5,2),
+    Blood_Pressure  NUMBER(5,2)
+);
+
+-- ── 12. RespiratoryVitals (depends on Vitals) ────────
+CREATE TABLE RespiratoryVitals (
+    VitalsID            NUMBER          PRIMARY KEY
+                        REFERENCES Vitals(VitalsID),
     Respiratory_Rate    NUMBER(5,2),
-    Oxygen_Saturation   NUMBER(5,2),
-    GFR                 NUMBER(6,2),
-    Serum_Creatinine    NUMBER(5,2),
-    Temperature         NUMBER(5,2),
-    Blood_Sugar         NUMBER(6,2),
-    Metabolic           NUMBER(6,2),
-    PatientID           VARCHAR2(20)    REFERENCES Patient(PatientID)
+    Oxygen_Sat          NUMBER(5,2)
 );
 
--- ── 11. SymptomMaster (no dependencies) ──────────────
+-- ── 13. OtherVitals (depends on Vitals) ──────────────
+CREATE TABLE OtherVitals (
+    VitalsID        NUMBER          PRIMARY KEY
+                    REFERENCES Vitals(VitalsID),
+    Blood_Glucose   NUMBER(6,2)
+);
+
+-- ── 14. Symptom (depends on Patient) ─────────────────
 CREATE TABLE SymptomMaster (
-    SymptomID   VARCHAR2(20)    PRIMARY KEY,
-    Name        VARCHAR2(100)   NOT NULL,
-    Type        VARCHAR2(50),
-    Description VARCHAR2(500),
-    Severity    VARCHAR2(20)
-);
-
--- ── 12. Symptom (depends on Patient) ─────────────────
-CREATE TABLE Symptom (
     SymptomID       VARCHAR2(20)    PRIMARY KEY,
     Name            VARCHAR2(100)   NOT NULL,
     Type            VARCHAR2(50),
     Description     VARCHAR2(500),
-    Severity        VARCHAR2(20),
-    PatientID       VARCHAR2(20)    REFERENCES Patient(PatientID)
+    Severity        VARCHAR2(20)
 );
 
--- ── 13. CustomSymptom (depends on Patient) ────────────
+-- ── 15. PatientSymptom (depends on Patient) ────────────
+CREATE TABLE PatientSymptom (
+    PatientID       VARCHAR2(20)    REFERENCES Patient(PatientID),
+    SymptomID       VARCHAR2(20)    REFERENCES SymptomMaster(SymptomID),
+    Recorded_Date   TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT   pk_patient_symptom PRIMARY KEY (PatientID, SymptomID, Recorded_Date)
+);
+
+-- ── 16. CustomSymptom (depends on Patient) ────────────
 CREATE TABLE CustomSymptom (
     CustomSymptomID NUMBER          GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     Name            VARCHAR2(100)   NOT NULL,
@@ -151,5 +163,26 @@ CREATE TABLE CustomSymptom (
     Recorded_Date   TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
     PatientID       VARCHAR2(20)    REFERENCES Patient(PatientID)
 );
+
+-- ═══════════════════════════════════════════════════════
+-- DML — Carefree Database
+-- ═══════════════════════════════════════════════════════
+
+-- ── Seed SymptomMaster (generic hardcoded symptoms) ──
+INSERT INTO SymptomMaster (SymptomID, Name, Type, Description, Severity) VALUES ('S-001', 'Fever', 'General', 'Elevated body temperature', 'Moderate');
+INSERT INTO SymptomMaster (SymptomID, Name, Type, Description, Severity) VALUES ('S-002', 'Headache', 'Neurological', 'Pain in the head or neck', 'Mild');
+INSERT INTO SymptomMaster (SymptomID, Name, Type, Description, Severity) VALUES ('S-003', 'Fatigue', 'General', 'Extreme tiredness', 'Mild');
+INSERT INTO SymptomMaster (SymptomID, Name, Type, Description, Severity) VALUES ('S-004', 'Chest Pain', 'Cardiac', 'Pain or pressure in chest', 'High');
+INSERT INTO SymptomMaster (SymptomID, Name, Type, Description, Severity) VALUES ('S-005', 'Shortness of Breath', 'Respiratory', 'Difficulty breathing', 'High');
+INSERT INTO SymptomMaster (SymptomID, Name, Type, Description, Severity) VALUES ('S-006', 'Nausea', 'Gastro', 'Urge to vomit', 'Mild');
+INSERT INTO SymptomMaster (SymptomID, Name, Type, Description, Severity) VALUES ('S-007', 'Dizziness', 'Neurological', 'Feeling faint or unsteady', 'Moderate');
+INSERT INTO SymptomMaster (SymptomID, Name, Type, Description, Severity) VALUES ('S-008', 'Joint Pain', 'Musculoskeletal', 'Pain in joints', 'Moderate');
+INSERT INTO SymptomMaster (SymptomID, Name, Type, Description, Severity) VALUES ('S-009', 'High Blood Pressure', 'Cardiac', 'Elevated BP readings', 'High');
+INSERT INTO SymptomMaster (SymptomID, Name, Type, Description, Severity) VALUES ('S-010', 'Swelling', 'General', 'Fluid buildup in tissues', 'Moderate');
+INSERT INTO SymptomMaster (SymptomID, Name, Type, Description, Severity) VALUES ('S-011', 'Cough', 'Respiratory', 'Persistent coughing', 'Mild');
+INSERT INTO SymptomMaster (SymptomID, Name, Type, Description, Severity) VALUES ('S-012', 'Loss of Appetite', 'Gastro', 'Reduced desire to eat', 'Mild');
+INSERT INTO SymptomMaster (SymptomID, Name, Type, Description, Severity) VALUES ('S-013', 'Confusion', 'Neurological', 'Disorientation or memory loss', 'High');
+INSERT INTO SymptomMaster (SymptomID, Name, Type, Description, Severity) VALUES ('S-014', 'Insomnia', 'General', 'Difficulty sleeping', 'Mild');
+INSERT INTO SymptomMaster (SymptomID, Name, Type, Description, Severity) VALUES ('S-015', 'Back Pain', 'Musculoskeletal', 'Pain in lower or upper back', 'Moderate');
 
 COMMIT;

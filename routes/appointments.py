@@ -183,3 +183,19 @@ def get_doctors(cid: str, db=Depends(get_db)):
                 for r in rows]
     finally:
         cur.close()
+
+# get all appointments today
+@router.get("/api/appointments/stats/{cid}")
+def get_appt_stats(cid: str, db=Depends(get_db)):
+    cur = db.cursor()
+    try:
+        today = datetime.now().date()
+        cur.execute("""
+            SELECT COUNT(*) FROM Appointment a
+            JOIN   Patient p ON p.PatientID = a.PatientID
+            WHERE  p.CaretakerID = :1
+              AND  TRUNC(a.Appointment_DateTime) = :2
+        """, (cid, today))
+        return {"count": cur.fetchone()[0]}
+    finally:
+        cur.close()

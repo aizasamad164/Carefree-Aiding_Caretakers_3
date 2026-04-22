@@ -1,13 +1,12 @@
 ﻿from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
-from models import SymptomCreate, CustomSymptomCreate
+from models import PatientSymptomCreate, CustomSymptomCreate
 from datetime import datetime
 
 router = APIRouter()
 
 
-# ── Get master symptom list (for dropdown) ────────────────────────────────────
-# MUST be before /api/symptoms/{pid} to avoid route clash
+# ── Get master list (for dropdown) — MUST be before /{pid} ───────────────────
 @router.get("/api/symptoms/master")
 def get_master_symptoms(db=Depends(get_db)):
     cur = db.cursor()
@@ -23,7 +22,7 @@ def get_master_symptoms(db=Depends(get_db)):
         cur.close()
 
 
-# ── Get all symptoms for a patient (predefined + custom) ──────────────────────
+# ── Get all symptoms for a patient (linked + custom) ─────────────────────────
 @router.get("/api/symptoms/{pid}")
 def get_symptoms(pid: str, db=Depends(get_db)):
     cur = db.cursor()
@@ -31,13 +30,14 @@ def get_symptoms(pid: str, db=Depends(get_db)):
         keys = ["symptom_id", "name", "type", "description",
                 "severity", "recorded_date", "source"]
 
-        # Predefined
+        # Predefined — joined from master via bridge table
         cur.execute("""
-            SELECT SymptomID, Name, Type, Description, Severity,
-                   NULL AS Recorded_Date, 'predefined' AS source
-            FROM   Symptom
-            WHERE  PatientID = :1
-            ORDER BY Name
+            SELECT sm.SymptomID, sm.Name, sm.Type, sm.Description,
+                   sm.Severity, ps.Recorded_Date, 'predefined' AS source
+            FROM   PatientSymptom ps
+            JOIN   SymptomMaster sm ON sm.SymptomID = ps.SymptomID
+            WHERE  ps.PatientID = :1
+            ORDER BY sm.Name
         """, (pid,))
         predefined = []
         for r in cur.fetchall():
@@ -46,12 +46,14 @@ def get_symptoms(pid: str, db=Depends(get_db)):
                 if hasattr(val, 'read'):
                     val = val.read()
                 d[keys[i]] = val
+            if isinstance(d.get("recorded_date"), datetime):
+                d["recorded_date"] = d["recorded_date"].strftime("%Y-%m-%d %H:%M")
             predefined.append(d)
 
-        # Custom
+        # Custom — freeform per patient
         cur.execute("""
-            SELECT CustomSymptomID, Name, Type, Description, Severity,
-                   Recorded_Date, 'custom' AS source
+            SELECT CustomSymptomID, Name, Type, Description,
+                   Severity, Recorded_Date, 'custom' AS source
             FROM   CustomSymptom
             WHERE  PatientID = :1
             ORDER BY Recorded_Date DESC
@@ -72,28 +74,26 @@ def get_symptoms(pid: str, db=Depends(get_db)):
         cur.close()
 
 
-# ── Add predefined symptom to patient (picked from master) ────────────────────
+# ── Link master symptom to patient ───────────────────────────────────────────
 @router.post("/api/symptom/predefined")
-def add_predefined_symptom(s: SymptomCreate, db=Depends(get_db)):
+def add_patient_symptom(s: PatientSymptomCreate, db=Depends(get_db)):
     cur = db.cursor()
     try:
         cur.execute("SELECT COUNT(*) FROM Patient WHERE PatientID=:1", (s.patient_id,))
         if cur.fetchone()[0] == 0:
             raise HTTPException(404, "Patient not found")
 
-        # Check not already linked
-        cur.execute("SELECT COUNT(*) FROM Symptom WHERE SymptomID=:1 AND PatientID=:2",
-                    (s.symptom_id, s.patient_id))
-        if cur.fetchone()[0] > 0:
-            raise HTTPException(400, "Symptom already added for this patient")
+        cur.execute("SELECT COUNT(*) FROM SymptomMaster WHERE SymptomID=:1", (s.symptom_id,))
+        if cur.fetchone()[0] == 0:
+            raise HTTPException(404, "Symptom not found in master list")
 
         cur.execute("""
-            INSERT INTO Symptom (SymptomID, Name, Type, Description, Severity, PatientID)
-            VALUES (:1,:2,:3,:4,:5,:6)
-        """, (s.symptom_id, s.name, s.type, s.description, s.severity, s.patient_id))
+            INSERT INTO PatientSymptom (PatientID, SymptomID, Recorded_Date)
+            VALUES (:1, :2, CURRENT_TIMESTAMP)
+        """, (s.patient_id, s.symptom_id))
 
         db.commit()
-        return {"message": "Symptom added"}
+        return {"message": "Symptom linked to patient"}
     except HTTPException:
         raise
     except Exception as e:
@@ -103,7 +103,7 @@ def add_predefined_symptom(s: SymptomCreate, db=Depends(get_db)):
         cur.close()
 
 
-# ── Add custom freeform symptom ───────────────────────────────────────────────
+# ── Add custom symptom ────────────────────────────────────────────────────────
 @router.post("/api/symptom/custom")
 def add_custom_symptom(s: CustomSymptomCreate, db=Depends(get_db)):
     cur = db.cursor()
@@ -129,16 +129,19 @@ def add_custom_symptom(s: CustomSymptomCreate, db=Depends(get_db)):
         cur.close()
 
 
-# ── Delete predefined symptom from patient ────────────────────────────────────
-@router.delete("/api/symptom/predefined/{sid}")
-def delete_predefined_symptom(sid: str, db=Depends(get_db)):
+# ── Unlink predefined symptom from patient ────────────────────────────────────
+@router.delete("/api/symptom/predefined/{pid}/{sid}")
+def remove_patient_symptom(pid: str, sid: str, db=Depends(get_db)):
     cur = db.cursor()
     try:
-        cur.execute("DELETE FROM Symptom WHERE SymptomID=:1", (sid,))
+        cur.execute("""
+            DELETE FROM PatientSymptom
+            WHERE PatientID=:1 AND SymptomID=:2
+        """, (pid, sid))
         if cur.rowcount == 0:
-            raise HTTPException(404, "Symptom not found")
+            raise HTTPException(404, "Symptom link not found")
         db.commit()
-        return {"message": "Symptom removed"}
+        return {"message": "Symptom unlinked"}
     except HTTPException:
         raise
     except Exception as e:

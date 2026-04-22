@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from routes import (auth, patients, caretakers, tasks, appointments,
-                    expenses, notifications, predictions, vitals)
+                    expenses, notifications, predictions, vitals, symptoms)
 from config import DB_HOST, DB_PORT, DB_SERVICE, DB_USER, DB_PASSWORD
 import cx_Oracle
 
@@ -46,6 +46,7 @@ app.include_router(expenses.router)
 app.include_router(notifications.router)
 app.include_router(predictions.router)
 app.include_router(vitals.router)
+app.include_router(symptoms.router)
 
 
 # ── Page routes ───────────────────────────────────────────────────────────────
