@@ -1,24 +1,36 @@
-﻿*, *::before, *::after {
+﻿/* ─────────────────────────────────────────────────────────────────────────────
+   guardian.css  ·  Palette: #231942 · #b96ac9 · #e980fc · #ffd2fc · #ddfff7
+   ───────────────────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0
 }
 
 :root {
-    --navy: #0B1F3A;
-    --navy2: #162944;
-    --gold: #C8973A;
-    --gold-lt: #E8B85A;
-    --cream: #FAF7F2;
-    --cream2: #F0EBE0;
-    --cream3: #E8E0D2;
-    --text: #1A1A2E;
-    --muted: #7A8899;
+    /* ── Core palette ── */
+    --navy: #231942;
+    --navy2: #3d1f5e;
+    --navy3: #5e2a7a;
+    --purple-mid: #b96ac9;
+    --purple: #e980fc;
+    --purple-lt: #ffd2fc;
+    --mint: #ddfff7;
+    --mint-dk: #a8f0e0;
+    /* ── Surface / neutral ── */
+    --cream: #fdf6ff;
+    --cream2: #f5e8fb;
+    --cream3: #e8d0f0;
+    --text: #080705;
+    --muted: #5a4d5e;
     --white: #fff;
-    --green: #2E7D5E;
-    --green-lt: #e8f5ef;
-    --red: #C0392B;
-    --red-lt: #fdf2f2;
+    /* ── Semantic states — palette-only ── */
+    --green: #231942;
+    --green-lt: #ddfff7;
+    --red: #5e2a7a;
+    --red-lt: rgba(185,106,201,0.12);
+    /* ── Layout ── */
     --sidebar: 220px;
     --header: 60px;
 }
@@ -42,7 +54,7 @@ body {
 .sidebar {
     width: var(--sidebar);
     flex-shrink: 0;
-    background: var(--navy);
+    background: linear-gradient(160deg, #1a0f33 0%, #231942 40%, #3d1f5e 75%, #5e2a7a 100%);
     position: fixed;
     top: 0;
     left: 0;
@@ -50,12 +62,13 @@ body {
     display: flex;
     flex-direction: column;
     z-index: 100;
-    border-right: 1px solid rgba(200,151,58,0.15);
+    border-right: 1px solid rgba(233,128,252,0.15);
+    box-shadow: 4px 0 30px rgba(35,25,66,0.25);
 }
 
 .sb-logo {
     padding: 22px 20px 18px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -64,17 +77,18 @@ body {
 .sb-icon {
     width: 34px;
     height: 34px;
-    background: var(--gold);
+    background: linear-gradient(135deg, var(--purple), var(--navy2));
     border-radius: 9px;
     display: grid;
     place-items: center;
     flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(233,128,252,0.35);
 }
 
     .sb-icon svg {
         width: 18px;
         height: 18px;
-        fill: var(--navy)
+        fill: var(--white)
     }
 
 .sb-name {
@@ -84,12 +98,13 @@ body {
 }
 
     .sb-name span {
-        color: var(--gold)
+        color: var(--purple)
     }
 
 .sb-user {
     padding: 14px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    background: rgba(0,0,0,0.10);
 }
 
 .sb-uname {
@@ -117,23 +132,25 @@ body {
     gap: 9px;
     padding: 10px 12px;
     border-radius: 9px;
-    color: rgba(255,255,255,0.5);
+    color: rgba(255,255,255,0.50);
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: all .18s;
     margin-bottom: 1px;
+    border-left: 2px solid transparent;
 }
 
     .sb-item:hover {
-        background: rgba(255,255,255,0.06);
-        color: rgba(255,255,255,0.85)
+        background: rgba(233,128,252,0.10);
+        color: var(--purple-lt);
+        border-left-color: rgba(233,128,252,0.30);
     }
 
     .sb-item.active {
-        background: rgba(200,151,58,0.15);
-        color: var(--gold-lt);
-        border-left: 2px solid var(--gold)
+        background: rgba(233,128,252,0.15);
+        color: var(--purple);
+        border-left: 2px solid var(--purple);
     }
 
     .sb-item .em {
@@ -145,16 +162,16 @@ body {
 
 .sb-footer {
     padding: 14px;
-    border-top: 1px solid rgba(255,255,255,0.06)
+    border-top: 1px solid rgba(255,255,255,0.07)
 }
 
 .btn-logout {
     width: 100%;
     padding: 9px;
-    border: 1px solid rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.14);
     background: transparent;
     border-radius: 8px;
-    color: rgba(255,255,255,0.5);
+    color: rgba(255,255,255,0.50);
     font-family: 'Outfit', sans-serif;
     font-size: 12px;
     cursor: pointer;
@@ -162,8 +179,9 @@ body {
 }
 
     .btn-logout:hover {
-        background: rgba(255,255,255,0.07);
-        color: var(--white)
+        background: rgba(233,128,252,0.12);
+        color: var(--purple-lt);
+        border-color: rgba(233,128,252,0.35);
     }
 
 /* ── Main ── */
@@ -186,6 +204,7 @@ body {
     position: sticky;
     top: 0;
     z-index: 50;
+    box-shadow: 0 2px 12px rgba(35,25,66,0.07);
 }
 
 .h-title {
@@ -195,12 +214,13 @@ body {
 }
 
 .h-badge {
-    background: var(--green-lt);
-    color: var(--green);
+    background: var(--mint);
+    color: var(--navy);
     padding: 4px 12px;
     border-radius: 20px;
     font-size: 12px;
-    font-weight: 600
+    font-weight: 600;
+    border: 1px solid var(--mint-dk);
 }
 
 .content {
@@ -244,7 +264,13 @@ body {
     border: 1px solid var(--cream3);
     border-radius: 12px;
     padding: 16px;
+    transition: box-shadow .2s, transform .2s;
 }
+
+    .info-item:hover {
+        box-shadow: 0 4px 16px rgba(35,25,66,0.08);
+        transform: translateY(-1px);
+    }
 
 .info-lbl {
     font-size: 10px;
@@ -264,13 +290,14 @@ body {
 
 /* ── Balance card ── */
 .balance-hero {
-    background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 60%, #0f2a4a 100%);
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 60%, var(--navy3) 100%);
     border-radius: 18px;
     padding: 28px 32px;
     color: var(--white);
     margin-bottom: 18px;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 8px 28px rgba(35,25,66,0.22);
 }
 
     .balance-hero::before {
@@ -281,7 +308,7 @@ body {
         width: 200px;
         height: 200px;
         border-radius: 50%;
-        background: rgba(200,151,58,0.1);
+        background: rgba(233,128,252,0.10);
     }
 
     .balance-hero::after {
@@ -292,12 +319,12 @@ body {
         width: 150px;
         height: 150px;
         border-radius: 50%;
-        background: rgba(200,151,58,0.05);
+        background: rgba(233,128,252,0.05);
     }
 
 .bal-lbl {
     font-size: 11px;
-    color: rgba(255,255,255,0.5);
+    color: rgba(255,255,255,0.50);
     letter-spacing: .8px;
     text-transform: uppercase;
     margin-bottom: 8px
@@ -312,11 +339,11 @@ body {
 
 .bal-sub {
     font-size: 12px;
-    color: rgba(255,255,255,0.4)
+    color: rgba(255,255,255,0.40)
 }
 
 .bal-gold {
-    color: var(--gold-lt)
+    color: var(--purple-lt)
 }
 
 /* ── Add funds ── */
@@ -337,11 +364,12 @@ body {
         color: var(--text);
         background: var(--white);
         outline: none;
-        transition: border-color .2s;
+        transition: border-color .2s, box-shadow .2s;
     }
 
         .add-funds input:focus {
-            border-color: var(--gold)
+            border-color: var(--purple);
+            box-shadow: 0 0 0 3px rgba(233,128,252,0.12);
         }
 
 /* ── Cards & Tables ── */
@@ -350,8 +378,15 @@ body {
     border: 1px solid var(--cream3);
     border-radius: 16px;
     padding: 22px;
-    margin-bottom: 18px
+    margin-bottom: 18px;
+    box-shadow: 0 2px 12px rgba(35,25,66,0.06);
+    transition: box-shadow .2s, transform .2s;
 }
+
+    .card:hover {
+        box-shadow: 0 6px 22px rgba(35,25,66,0.11);
+        transform: translateY(-1px);
+    }
 
 .card-hd {
     display: flex;
@@ -363,7 +398,8 @@ body {
 .card-ttl {
     font-size: 14px;
     font-weight: 600;
-    color: var(--text)
+    color: var(--navy);
+    font-family: 'Playfair Display', serif;
 }
 
 .tbl-wrap {
@@ -384,7 +420,8 @@ th {
     font-weight: 600;
     letter-spacing: .5px;
     text-transform: uppercase;
-    border-bottom: 2px solid var(--cream3)
+    border-bottom: 2px solid var(--cream3);
+    background: var(--cream);
 }
 
 td {
@@ -399,7 +436,7 @@ tr:last-child td {
 }
 
 tbody tr:hover td {
-    background: var(--cream)
+    background: var(--cream2)
 }
 
 .badge {
@@ -437,9 +474,10 @@ tbody tr:hover td {
 }
 
     .pill.active {
-        background: var(--navy);
+        background: linear-gradient(135deg, var(--navy), var(--navy2));
         color: var(--white);
-        border-color: var(--navy)
+        border-color: var(--navy);
+        box-shadow: 0 4px 12px rgba(35,25,66,0.2);
     }
 
 /* ── Query area ── */
@@ -467,13 +505,14 @@ textarea {
     color: var(--text);
     background: var(--white);
     outline: none;
-    transition: border-color .2s;
+    transition: border-color .2s, box-shadow .2s;
     resize: vertical;
     min-height: 100px;
 }
 
     textarea:focus {
-        border-color: var(--gold)
+        border-color: var(--purple);
+        box-shadow: 0 0 0 3px rgba(233,128,252,0.12);
     }
 
 /* ── Buttons ── */
@@ -493,22 +532,25 @@ textarea {
 }
 
 .btn-primary {
-    background: var(--navy);
-    color: var(--white)
+    background: linear-gradient(135deg, var(--navy), var(--navy2));
+    color: var(--white);
+    box-shadow: 0 4px 14px rgba(35,25,66,0.25);
 }
 
     .btn-primary:hover {
-        background: var(--navy2);
-        transform: translateY(-1px)
+        transform: translateY(-1px);
+        box-shadow: 0 8px 22px rgba(35,25,66,0.35);
     }
 
 .btn-gold {
-    background: var(--gold);
-    color: var(--navy)
+    background: linear-gradient(135deg, var(--purple), #c040e8);
+    color: var(--white);
+    box-shadow: 0 4px 14px rgba(233,128,252,0.30);
 }
 
     .btn-gold:hover {
-        background: var(--gold-lt)
+        transform: translateY(-1px);
+        box-shadow: 0 8px 22px rgba(233,128,252,0.40);
     }
 
 .btn-ghost {
@@ -518,7 +560,8 @@ textarea {
 }
 
     .btn-ghost:hover {
-        background: var(--cream3)
+        background: var(--cream3);
+        transform: translateY(-1px);
     }
 
 .btn-sm {
@@ -526,7 +569,7 @@ textarea {
     font-size: 12px
 }
 
-/* ── Toast ── */
+/* ── Toast — palette, no maroon/green ── */
 #toast {
     position: fixed;
     bottom: 24px;
@@ -537,7 +580,7 @@ textarea {
     font-size: 13px;
     font-weight: 500;
     color: var(--white);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
     transform: translateY(80px);
     opacity: 0;
     transition: all .3s;
@@ -550,11 +593,11 @@ textarea {
     }
 
     #toast.ok {
-        background: var(--green)
+        background: linear-gradient(135deg, var(--navy), var(--navy2))
     }
 
     #toast.err {
-        background: var(--red)
+        background: linear-gradient(135deg, var(--navy3), var(--purple-mid))
     }
 
 /* ── Empty state ── */

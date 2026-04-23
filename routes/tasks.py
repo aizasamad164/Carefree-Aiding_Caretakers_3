@@ -1,5 +1,5 @@
 import random
-import cx_Oracle
+import oracledb
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
 from models import TaskCreate
@@ -175,7 +175,7 @@ def create_task(t: TaskCreate, db=Depends(get_db)):
             raise HTTPException(404, "Patient not found")
         cid, pname = row[0], row[1]
 
-        vid_var   = cur.var(cx_Oracle.NUMBER)
+        vid_var   = cur.var(oracledb.DB_TYPE_NUMBER)
         task_time = datetime.fromisoformat(t.time.replace('Z', ''))
 
         cur.execute("""

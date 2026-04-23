@@ -1,4 +1,5 @@
 import random
+import oracledb
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
 from models import ApptCreate
@@ -111,7 +112,7 @@ def create_appt(a: ApptCreate, db=Depends(get_db)):
             cur.execute("INSERT INTO Doctor (DoctorID, Doctor_Name, Specialization) VALUES (:1,:2,:3)",
                         (doc_id, a.doctor_name.strip(), a.specialization))
 
-        vid_var = cur.var(__import__('cx_Oracle').NUMBER)
+        vid_var = cur.var(oracledb.DB_TYPE_NUMBER)
         cur.execute("""
             INSERT INTO Appointment (
                 Appointment_Category, Appointment_DateTime,

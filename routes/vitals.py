@@ -1,4 +1,5 @@
-﻿from fastapi import APIRouter, Depends, HTTPException
+﻿import oracledb
+from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
 from models import VitalsCreate, VitalsUpdate
 from datetime import datetime
@@ -33,6 +34,7 @@ def get_vitals(pid: str, db=Depends(get_db)):
             if isinstance(d["recorded_time"], datetime):
                 d["recorded_time"] = d["recorded_time"].strftime("%Y-%m-%d %H:%M")
             result.append(d)
+        return result
     finally:
         cur.close()
 
@@ -42,30 +44,40 @@ def get_vitals(pid: str, db=Depends(get_db)):
 def create_vitals(v: VitalsCreate, db=Depends(get_db)):
     cur = db.cursor()
     try:
-        vid_var = cur.var(__import__('cx_Oracle').NUMBER)
+        # Accept category from either field name the frontend may send
+        category = v.vitals_category or v.category or "General"
+
+        vid_var = cur.var(oracledb.DB_TYPE_NUMBER)
         cur.execute("""
             INSERT INTO Vitals (Recorded_Time, VitalsCategory, PatientID)
             VALUES (CURRENT_TIMESTAMP, :1, :2)
             RETURNING VitalsID INTO :3
-        """, (v.vitals_category, v.patient_id, vid_var))
+        """, (category, v.patient_id, vid_var))
 
         raw = vid_var.getvalue()
         vid = int(raw[0] if isinstance(raw, list) else raw)
 
-        cur.execute("""
-            INSERT INTO CardiacVitals (VitalsID, Pulse_Rate, Blood_Pressure)
-            VALUES (:1, :2, :3)
-        """, (vid, v.pulse_rate, v.blood_pressure))
+        # Only insert cardiac row if at least one cardiac value is present —
+        # inserting an all-NULL row creates an orphan that breaks the JOIN on read.
+        if v.pulse_rate is not None or v.blood_pressure is not None:
+            cur.execute("""
+                INSERT INTO CardiacVitals (VitalsID, Pulse_Rate, Blood_Pressure)
+                VALUES (:1, :2, :3)
+            """, (vid, v.pulse_rate, v.blood_pressure))
 
-        cur.execute("""
-            INSERT INTO RespiratoryVitals (VitalsID, Respiratory_Rate, Oxygen_Sat)
-            VALUES (:1, :2, :3)
-        """, (vid, v.respiratory_rate, v.oxygen_sat))
+        # Only insert respiratory row if at least one respiratory value is present
+        if v.respiratory_rate is not None or v.oxygen_sat is not None:
+            cur.execute("""
+                INSERT INTO RespiratoryVitals (VitalsID, Respiratory_Rate, Oxygen_Sat)
+                VALUES (:1, :2, :3)
+            """, (vid, v.respiratory_rate, v.oxygen_sat))
 
-        cur.execute("""
-            INSERT INTO OtherVitals (VitalsID, Blood_Glucose)
-            VALUES (:1, :2)
-        """, (vid, v.blood_glucose))
+        # Only insert other row if blood glucose is present
+        if v.blood_glucose is not None:
+            cur.execute("""
+                INSERT INTO OtherVitals (VitalsID, Blood_Glucose)
+                VALUES (:1, :2)
+            """, (vid, v.blood_glucose))
 
         db.commit()
         return {"message": "Vitals recorded", "vitals_id": vid}

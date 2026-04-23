@@ -30,6 +30,18 @@ def get_symptoms(pid: str, db=Depends(get_db)):
         keys = ["symptom_id", "name", "type", "description",
                 "severity", "recorded_date", "source"]
 
+        def read_row(row):
+            """Convert an Oracle row to a plain dict, reading any LOB values."""
+            d = {}
+            for i, val in enumerate(row):
+                # Oracle LOB objects must be .read() before the cursor closes
+                if hasattr(val, 'read'):
+                    val = val.read()
+                d[keys[i]] = val
+            if isinstance(d.get("recorded_date"), datetime):
+                d["recorded_date"] = d["recorded_date"].strftime("%Y-%m-%d %H:%M")
+            return d
+
         # Predefined — joined from master via bridge table
         cur.execute("""
             SELECT sm.SymptomID, sm.Name, sm.Type, sm.Description,
@@ -39,16 +51,7 @@ def get_symptoms(pid: str, db=Depends(get_db)):
             WHERE  ps.PatientID = :1
             ORDER BY sm.Name
         """, (pid,))
-        predefined = []
-        for r in cur.fetchall():
-            d = {}
-            for i, val in enumerate(r):
-                if hasattr(val, 'read'):
-                    val = val.read()
-                d[keys[i]] = val
-            if isinstance(d.get("recorded_date"), datetime):
-                d["recorded_date"] = d["recorded_date"].strftime("%Y-%m-%d %H:%M")
-            predefined.append(d)
+        predefined = [read_row(r) for r in cur.fetchall()]
 
         # Custom — freeform per patient
         cur.execute("""
@@ -58,16 +61,7 @@ def get_symptoms(pid: str, db=Depends(get_db)):
             WHERE  PatientID = :1
             ORDER BY Recorded_Date DESC
         """, (pid,))
-        custom = []
-        for r in cur.fetchall():
-            d = {}
-            for i, val in enumerate(r):
-                if hasattr(val, 'read'):
-                    val = val.read()
-                d[keys[i]] = val
-            if isinstance(d.get("recorded_date"), datetime):
-                d["recorded_date"] = d["recorded_date"].strftime("%Y-%m-%d %H:%M")
-            custom.append(d)
+        custom = [read_row(r) for r in cur.fetchall()]
 
         return {"predefined": predefined, "custom": custom}
     finally:

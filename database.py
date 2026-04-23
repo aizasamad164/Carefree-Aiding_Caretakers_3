@@ -1,4 +1,4 @@
-import cx_Oracle
+import oracledb
 from config import (DB_HOST, DB_PORT, DB_SERVICE, DB_USER, DB_PASSWORD,
                     DB_MODE, USE_CLOUD, WALLET_DIR, WALLET_PASSWORD)
 
@@ -7,7 +7,7 @@ def get_dsn():
 
 def get_db():
     if USE_CLOUD and WALLET_DIR:
-        conn = cx_Oracle.connect(
+        conn = oracledb.connect(
             user=DB_USER,
             password=DB_PASSWORD,
             dsn=get_dsn(),
@@ -16,7 +16,7 @@ def get_db():
             wallet_password=WALLET_PASSWORD
         )
     else:
-        conn = cx_Oracle.connect(
+        conn = oracledb.connect(
             user=DB_USER,
             password=DB_PASSWORD,
             dsn=get_dsn()

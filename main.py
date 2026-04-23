@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from routes import (auth, patients, caretakers, tasks, appointments,
                     expenses, notifications, predictions, vitals, symptoms)
 from config import DB_HOST, DB_PORT, DB_SERVICE, DB_USER, DB_PASSWORD
-import cx_Oracle
+import oracledb
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(title="Carefree API", version="5.0 — Normalized Oracle Edition")
@@ -24,7 +24,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 @app.on_event("startup")
 async def startup():
     try:
-        conn = cx_Oracle.connect(
+        conn = oracledb.connect(
             user=DB_USER,
             password=DB_PASSWORD,
             dsn=f"{DB_HOST}:{DB_PORT}/{DB_SERVICE}"
