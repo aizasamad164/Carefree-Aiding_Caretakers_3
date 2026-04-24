@@ -152,8 +152,7 @@ async function loadFinances() {
 
 async function sendBalance() {
     const amt = parseFloat(document.getElementById('funds-input').value);
-    if (!amt || amt <= 0) { toast('Enter a valid amount', 'err'); return }
-
+    
     const r = await fetch(`/api/patient/${PID}/balance/add`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },

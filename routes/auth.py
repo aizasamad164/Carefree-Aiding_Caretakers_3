@@ -34,15 +34,18 @@ def login(r: LoginReq, db=Depends(get_db)):
         return {"role": "caretaker", "id": row[0], "name": row[1]}
 
     elif r.role == "guardian":
-        # Guardian_Name and Guardian_Password now live on Guardian table
+        # JOIN Guardian with Patient because GuardianID is stored in the Patient table
         cur.execute("""
-            SELECT g.PatientID, g.Guardian_Name
+            SELECT p.PatientID, g.Guardian_Name
             FROM   Guardian g
+            JOIN   Patient p ON g.GuardianID = p.GuardianID
             WHERE  g.Guardian_Name=:1 AND g.Guardian_Password=:2
         """, (r.username, r.password))
+        
         row = cur.fetchone()
         if not row:
-            raise HTTPException(401, "Invalid credentials")
+            raise HTTPException(401, "Invalid credentials or no assigned patient")
+            
         return {"role": "guardian", "patient_id": row[0], "name": row[1]}
 
     raise HTTPException(400, "Invalid role")

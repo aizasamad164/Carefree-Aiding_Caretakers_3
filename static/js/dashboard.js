@@ -1,6 +1,4 @@
-﻿let dashVitalsChart = null;
-
-async function loadDash() {
+﻿async function loadDash() {
     try {
         const r = await fetch(`/api/patients/${CF.id}`);
         patients = await r.json();
@@ -15,24 +13,90 @@ async function loadDash() {
     try {
         const rt = await fetch(`/api/tasks/stats/${CF.id}`);
         const td = await rt.json();
-        document.getElementById('st-tasks').textContent = td.count ?? '—';
-    } catch { document.getElementById('st-tasks').textContent = '—'; }
+
+        // Update the card number immediately
+        document.getElementById('st-tasks').textContent = td.count ?? '0';
+        // 3.33 means 30 tasks will fill the bar exactly to 100%
+        document.querySelectorAll('.stat-bar-fill')[1].style.width = Math.min(td.count * 3.33, 100) + '%';
+
+        // Fix: Wait for Chart.js before calling the pie
+        waitForChartJs(() => {
+            loadTaskPie(td);
+        });
+
+    } catch (err) {
+        console.error('Task fetch failed', err);
+        document.getElementById('st-tasks').textContent = '—';
+    }
 
     try {
         const ra = await fetch(`/api/appointments/stats/${CF.id}`);
         const ad = await ra.json();
         document.getElementById('st-appts').textContent = ad.count ?? '—';
+        document.querySelectorAll('.stat-bar-fill')[2].style.width = Math.min(ad.count * 10, 100) + '%';
+
     } catch { document.getElementById('st-appts').textContent = '—'; }
 
     try {
         const re = await fetch(`/api/expenses/stats/${CF.id}`);
         const ed = await re.json();
         document.getElementById('st-exps').textContent = ed.count ?? '—';
+        document.querySelectorAll('.stat-bar-fill')[3].style.width = Math.min(ed.count * 3.33, 100) + '%';
+
     } catch { document.getElementById('st-exps').textContent = '—'; }
 
     renderDashTbl(patients);
     fillPatSelects(patients);
-    waitForChartJs(() => loadVitalsOverview(patients));
+    await loadVitalsOverview(patients);
+}
+
+
+
+/* ─── Donut — Task Completion ───────────────────────────────────────── */
+let taskDonutChart = null;
+
+function loadTaskPie(taskData) {
+    const canvas = document.getElementById('donutChart');
+    const pctText = document.getElementById('donutPct');
+    if (!canvas) return;
+
+    // 1. Get numbers and FORCE them to be numbers
+    // pending = the count on your card
+    // completed = the number that should be ADDED to the total
+    const pending = Number(taskData.count || 0);
+    const completed = Number(taskData.completed || 0);
+
+    // 2. The Logic: Grand Total = Pending + Completed
+    const grandTotal = pending + completed;
+    const percentage = grandTotal > 0 ? Math.round((completed / grandTotal) * 100) : 0;
+
+    // Debugging: Check these numbers in your F12 console
+    console.log(`Donut Math: ${completed} done + ${pending} pending = ${grandTotal} total. (${percentage}%)`);
+
+    if (pctText) pctText.textContent = percentage + '%';
+
+    if (taskDonutChart) taskDonutChart.destroy();
+
+    taskDonutChart = new Chart(canvas, {
+        type: 'doughnut',
+        data: {
+            labels: ['Completed', 'Pending'],
+            datasets: [{
+                // Data[0] is Navy (Completed), Data[1] is Mint (Pending)
+                data: grandTotal > 0 ? [completed, pending] : [0, 1],
+                backgroundColor: ['#231942', '#a8f0e0'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            cutout: '80%',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
 }
 
 function waitForChartJs(cb, retries = 20) {
@@ -44,6 +108,7 @@ function waitForChartJs(cb, retries = 20) {
         console.warn('Chart.js did not load in time — vitals overview skipped');
     }
 }
+
 
 function renderDashTbl(list) {
     const tb = document.querySelector('#dash-tbl tbody');
@@ -71,165 +136,83 @@ function filterPatientsByPrefix(prefix) {
 // ── Dashboard Vitals Overview ─────────────────────────────────────────────────
 // Combo chart: grouped bars for Pulse / O2 / Glucose + overlaid line for total
 // (matches Image 1 style — dual Y-axis, bars + line overlay)
+/** Logic: Fetches latest vitals for top 6 patients and renders a combo bar/line chart. */
+
 async function loadVitalsOverview(patientList) {
     const canvas = document.getElementById('dashVitalsChart');
     const placeholder = document.getElementById('dash-vitals-placeholder');
-    if (!canvas) return;
-    if (typeof Chart === 'undefined') { console.warn('loadVitalsOverview: Chart.js not available yet'); return; }
+    if (!canvas || !patientList?.length) return;
 
-    if (!patientList || !patientList.length) {
-        if (placeholder) placeholder.style.display = 'flex';
-        if (canvas) canvas.style.display = 'none';
+    // Retry if Chart.js isn't loaded yet
+    if (typeof Chart === 'undefined') {
+        setTimeout(() => loadVitalsOverview(patientList), 200);
         return;
     }
 
+    // Fetch latest vitals for the first 6 patients
     const subset = patientList.slice(0, 6);
-    const results = await Promise.all(
-        subset.map(p =>
-            fetch(`/api/vitals/${p.patient_id}`)
-                .then(r => { if (!r.ok) return []; return r.json().catch(() => []); })
-                .catch(() => [])
-        )
-    );
+    const results = await Promise.all(subset.map(p =>
+        fetch(`/api/vitals/${p.patient_id}`)
+            .then(r => r.ok ? r.json() : [])
+            .catch(() => [])
+    ));
 
-    const labels = [], pulseData = [], o2Data = [], glucData = [];
+    const labels = [], pulse = [], o2 = [], glucose = [];
+
     subset.forEach((p, i) => {
-        const vitals = results[i];
-        if (vitals && vitals.length > 0) {
-            const latest = vitals[0];
-            const firstName = (p.patient_name || 'Patient').split(' ')[0];
-            labels.push(firstName);
-            pulseData.push(latest.pulse_rate != null ? Number(latest.pulse_rate) : null);
-            o2Data.push(latest.oxygen_sat != null ? Number(latest.oxygen_sat) : null);
-            glucData.push(latest.blood_glucose != null ? Number(latest.blood_glucose) : null);
+        const latest = results[i]?.[0];
+        if (latest) {
+            labels.push(p.patient_name.split(' ')[0]);
+
+            // Fix: Oracle results are often UPPERCASE; check both cases
+            const val = (k) => latest[k.toLowerCase()] ?? latest[k.toUpperCase()] ?? null;
+
+            pulse.push(val('pulse_rate'));
+            o2.push(val('oxygen_sat'));
+            glucose.push(val('blood_glucose'));
         }
     });
 
     if (!labels.length) {
         if (placeholder) placeholder.style.display = 'flex';
-        if (canvas) canvas.style.display = 'none';
+        canvas.style.display = 'none';
         return;
     }
 
+    // UI Toggle
     if (placeholder) placeholder.style.display = 'none';
     canvas.style.display = 'block';
 
-    if (dashVitalsChart) dashVitalsChart.destroy();
+    // Instance Management
+    if (window.myDashVitalsChart instanceof Chart) window.myDashVitalsChart.destroy();
 
-    // Compute "total" line values (sum of non-null readings per patient)
+    // Compute Total Line
     const totalLine = labels.map((_, i) => {
-        const vals = [pulseData[i], o2Data[i], glucData[i]].filter(v => v != null);
-        return vals.length ? vals.reduce((a, b) => a + b, 0) : null;
+        const v = [pulse[i], o2[i], glucose[i]].filter(n => n !== null).map(Number);
+        return v.length ? v.reduce((a, b) => a + b, 0) : null;
     });
 
-    dashVitalsChart = new Chart(canvas, {
+    window.myDashVitalsChart = new Chart(canvas, {
         data: {
             labels,
             datasets: [
-                // ── Grouped bars (left Y axis) ────────────────────────────
+                { type: 'bar', label: 'Pulse', data: pulse, backgroundColor: '#a8f0e0', yAxisID: 'yLeft', order: 2 },
+                { type: 'bar', label: 'O2 Sat', data: o2, backgroundColor: '#231942', yAxisID: 'yLeft', order: 2 },
+                { type: 'bar', label: 'Glucose', data: glucose, backgroundColor: '#b96ac9', yAxisID: 'yLeft', order: 2 },
                 {
-                    type: 'bar',
-                    label: 'Pulse Rate (bpm)',
-                    data: pulseData,
-                    backgroundColor: '#a8f0e0',   // mint-dk — cohesive with palette
-                    borderRadius: 4,
-                    borderSkipped: false,
-                    yAxisID: 'yLeft',
-                    order: 2
-                },
-                {
-                    type: 'bar',
-                    label: 'Oxygen Sat (%)',
-                    data: o2Data,
-                    backgroundColor: '#231942',   // navy
-                    borderRadius: 4,
-                    borderSkipped: false,
-                    yAxisID: 'yLeft',
-                    order: 2
-                },
-                {
-                    type: 'bar',
-                    label: 'Blood Glucose',
-                    data: glucData,
-                    backgroundColor: '#b96ac9',   // purple-mid
-                    borderRadius: 4,
-                    borderSkipped: false,
-                    yAxisID: 'yLeft',
-                    order: 2
-                },
-                // ── Total overlay line (right Y axis) ────────────────────
-                {
-                    type: 'line',
-                    label: 'Total',
-                    data: totalLine,
-                    borderColor: '#ffd2fc',
-                    backgroundColor: 'transparent',
-                    borderWidth: 2.5,
-                    tension: 0.35,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: '#ffd2fc',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2,
-                    fill: false,
-                    yAxisID: 'yRight',
-                    order: 1
+                    type: 'line', label: 'Total', data: totalLine,
+                    borderColor: '#ffd2fc', yAxisID: 'yRight', order: 1, tension: 0.3, pointRadius: 3
                 }
             ]
         },
         options: {
             responsive: true,
-            interaction: { mode: 'index', intersect: false },
-            plugins: {
-                legend: {
-                    labels: {
-                        font: { family: 'Outfit', size: 12 },
-                        color: '#5a4d5e',
-                        usePointStyle: true,
-                        pointStyle: 'circle',
-                        padding: 18
-                    }
-                },
-                tooltip: {
-                    backgroundColor: '#231942',
-                    titleFont: { family: 'Playfair Display', size: 13 },
-                    bodyFont: { family: 'Outfit', size: 12 },
-                    padding: 12, cornerRadius: 10,
-                    callbacks: {
-                        title: ctx => ctx[0].label + ' — Latest Reading',
-                        footer: () => 'Navigate to Vitals for full history'
-                    }
-                }
-            },
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } }, // Keeping it clean for dashboard view
             scales: {
-                yLeft: {
-                    type: 'linear',
-                    position: 'left',
-                    title: {
-                        display: true,
-                        text: "Patient's Values",
-                        font: { family: 'Outfit', size: 11 },
-                        color: '#5a4d5e'
-                    },
-                    grid: { color: 'rgba(35,25,66,0.05)' },
-                    ticks: { font: { family: 'Outfit' }, color: '#5a4d5e' }
-                },
-                yRight: {
-                    type: 'linear',
-                    position: 'right',
-                    title: {
-                        display: true,
-                        text: 'Total Amount',
-                        font: { family: 'Outfit', size: 11 },
-                        color: '#5a4d5e'
-                    },
-                    grid: { drawOnChartArea: false },
-                    ticks: { font: { family: 'Outfit' }, color: '#5a4d5e' }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { font: { family: 'Outfit', size: 12 }, color: '#5a4d5e' }
-                }
+                yLeft: { position: 'left', beginAtZero: true, ticks: { font: { family: 'Outfit' } } },
+                yRight: { position: 'right', grid: { display: false }, ticks: { font: { family: 'Outfit' } } },
+                x: { grid: { display: false }, ticks: { font: { family: 'Outfit' } } }
             }
         }
     });

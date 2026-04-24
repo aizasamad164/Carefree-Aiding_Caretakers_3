@@ -63,8 +63,6 @@ async function addAppt() {
     const pid = document.getElementById('a-patsel').value;
     if (!pid) { toast('Select a patient first', 'err'); return; }
 
-    // These capture whatever is in the text boxes, 
-    // even if they were auto-filled by the dropdown!
     const docName = document.getElementById('af-doctor').value.trim();
     const spec = document.getElementById('af-spec').value.trim();
     const dtVal = document.getElementById('af-time').value;
@@ -92,16 +90,22 @@ async function addAppt() {
 
     if (r.ok) {
         toast('Appointment scheduled');
-        // Clear fields
+
+        // ── RESET ALL FIELDS ──────────────────────────────────────────
         document.getElementById('af-doctor').value = '';
+        document.getElementById('af-desc').value = '';
         document.getElementById('af-spec').value = '';
-        document.getElementById('af-doc-select').value = 'NEW'; // Reset dropdown
+        document.getElementById('af-doc-select').value = 'NEW';
+
+        // Clear the time to show mm/dd/yyyy placeholder
+        document.getElementById('af-time').value = '';
+        // ──────────────────────────────────────────────────────────────
 
         // RESET the readOnly state for the next appointment
         document.getElementById('af-doctor').readOnly = false;
         document.getElementById('af-doctor').style.backgroundColor = "#ffffff";
 
-        await loadDoctorsForDropdown();  
+        await loadDoctorsForDropdown();
         toggleSec('appt-form');
         loadAppts();
     } else {
@@ -109,7 +113,6 @@ async function addAppt() {
         toast(errorData.detail || 'Error', 'err');
     }
 }
-
 // Dictionary to keep track of doctor details for auto-fill
 let doctorCache = {};
 
@@ -133,6 +136,7 @@ async function loadDoctorsForDropdown() {
         }
     });
 }
+
 // Function to call when the dropdown changes
 function onDoctorSelect() {
     const selVal = document.getElementById('af-doc-select').value;

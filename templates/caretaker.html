@@ -6,6 +6,7 @@
     <title>Carefree — Caretaker</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/static/css/caretaker.css" />
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 </head>
 <body>
 
@@ -102,31 +103,26 @@
 
                 <!-- ── Charts Row ── -->
                 <div style="display:grid;grid-template-columns:1fr 2fr;gap:18px;margin-bottom:20px">
-                    <!-- Donut -->
                     <div class="card" style="margin-bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
                         <div class="card-hd" style="width:100%">
-                            <div class="card-ttl">Task Completion</div>
+                            <div class="card-ttl">Task Progress</div>
                         </div>
                         <div style="position:relative;width:180px;height:180px;margin:8px auto 0">
                             <canvas id="donutChart" width="180" height="180"></canvas>
                             <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-                                <div id="donutPct" style="font-family:'Playfair Display',serif;font-size:28px;color:#231942;font-weight:700">68%</div>
-                                <div style="font-family:'Outfit',sans-serif;font-size:11px;color:#5a4d5e">Done</div>
+                                <div id="donutPct" style="font-family:'Playfair Display',serif;font-size:28px;color:#231942;font-weight:700">0%</div>
                             </div>
                         </div>
-                        <div style="display:flex;gap:14px;margin-top:16px;font-family:'Outfit',sans-serif;font-size:12px;color:#5a4d5e;flex-wrap:wrap;justify-content:center">
-                            <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#231942;margin-right:5px"></span>Completed</span>
-                            <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#e980fc;margin-right:5px"></span>In Progress</span>
-                            <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#a8f0e0;margin-right:5px"></span>Remaining</span>
-                        </div>
                     </div>
+
                     <!-- Stacked Bar + Line -->
                     <div class="card" style="margin-bottom:0">
                         <div class="card-hd">
-                            <div class="card-ttl">Monthly Overview</div>
+                            <div class="card-ttl">Weekly Overview</div>
                         </div>
                         <canvas id="barChart" height="140"></canvas>
                     </div>
+
                 </div>
 
                 <!-- Patients Table -->
@@ -149,12 +145,14 @@
                         <div class="card-ttl">Vitals Overview</div>
                         <button class="btn btn-ghost btn-sm" onclick="nav('vitals')">View All →</button>
                     </div>
-                    <p style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--muted);margin-bottom:16px">Latest recorded readings per patient — hover lines for detail</p>
-                    <div id="dash-vitals-placeholder" class="chart-empty" style="display:none">
-                        <span style="font-size:32px">🫀</span>
-                        <span>No vitals recorded yet</span>
+
+                    <div class="chart-container" style="position: relative; height: 350px; width: 100%;">
+                        <div id="dash-vitals-placeholder" class="chart-empty" style="display:none">
+                            <span style="font-size:32px">🫀</span>
+                            <span>No vitals recorded yet</span>
+                        </div>
+                        <canvas id="dashVitalsChart"></canvas>
                     </div>
-                    <canvas id="dashVitalsChart" height="110" style="display:none"></canvas>
                 </div>
             </div>
 
@@ -359,6 +357,7 @@
                     <select id="e-patsel" onchange="loadExps()"><option value="">— Select Patient —</option></select>
                     <button class="btn btn-gold btn-sm" onclick="toggleSec('exp-form')">+ Add Expense</button>
                 </div>
+
                 <div class="exp-section" id="exp-form">
                     <div style="font-size:13px;font-weight:600;margin-bottom:14px">New Expense</div>
                     <div class="form-grid g3">
@@ -380,12 +379,22 @@
                         <button class="btn btn-ghost btn-sm" onclick="toggleSec('exp-form')">Cancel</button>
                     </div>
                 </div>
+
                 <div class="card">
                     <div class="tbl-wrap">
                         <table id="exp-tbl">
                             <thead><tr><th>Name</th><th>Category</th><th>Amount</th><th>Date</th><th></th></tr></thead>
                             <tbody></tbody>
                         </table>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; padding: 20px; border-top: 1px solid #eee; background: #fafafa;">
+                        <div style="text-align: right;">
+                            <div style="font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; margin-bottom: 4px;">Remaining Balance</div>
+                            <div id="patient-balance-display" style="font-size: 22px; font-weight: 700; color: #2ecc71;">
+                                Rs. 0.00
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -444,7 +453,7 @@
                         <span style="font-size:36px">🫀</span>
                         <span>Select a patient with recorded vitals to see trends</span>
                     </div>
-                    <canvas id="vitalsChart" height="200" style="display:none;margin-top:12px"></canvas>
+                    <canvas id="vitalsChart" height="100" style="display:none;margin-top:12px"></canvas>
                 </div>
 
                 <!-- History Table -->
@@ -582,7 +591,7 @@
                         <p style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--muted);margin-bottom:20px">Select a patient to auto-fill, or enter details manually.</p>
                         <div style="margin-bottom:16px">
                             <label class="lbl">Select Patient (optional)</label>
-                            <select id="c-patsel" onchange="fillCostFromPat()" style="max-width:300px">
+                            <select id="c-patsel" onchange="handleCostModeChange()" style="max-width:300px">
                                 <option value="">— Manual Entry —</option>
                             </select>
                         </div>
@@ -620,7 +629,6 @@
         </div><!-- /content -->
     </div><!-- /main -->
 
-    <div id="toast"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -666,116 +674,6 @@
             bodyFont: { family: 'Outfit', size: 12 },
             padding: 12, cornerRadius: 10
         };
-
-        /* ─── Donut — Task Completion ───────────────────────────────────────── */
-        const donutChart = new Chart(document.getElementById('donutChart'), {
-            type: 'doughnut',
-            data: {
-                datasets: [{
-                    data: [68, 18, 14],
-                    backgroundColor: [C.deep, C.bright, C.mintDk],
-                    borderWidth: 4,
-                    borderColor: '#fff',
-                    hoverOffset: 12,
-                    hoverBorderColor: '#fff'
-                }]
-            },
-            options: {
-                cutout: '72%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => [' Completed', ' In Progress', ' Remaining'][ctx.dataIndex] + ': ' + ctx.raw + '%'
-                        },
-                        ...TT
-                    }
-                },
-                animation: { animateRotate: true, duration: 1000 }
-            }
-        });
-        document.getElementById('donutPct').textContent = '68%';
-
-        /* ─── Stacked Bar + Line — Monthly Overview ─────────────────────────── */
-        new Chart(document.getElementById('barChart'), {
-            type: 'bar',
-            data: {
-                labels: ['Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr'],
-                datasets: [
-                    {
-                        label: 'Completed',
-                        data: [20, 30, 25, 40, 35, 45],
-                        backgroundColor: C.deep,
-                        borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 6, bottomRight: 6 },
-                        borderSkipped: false,
-                        stack: 'tasks',
-                        barPercentage: 0.6,
-                    },
-                    {
-                        label: 'In Progress',
-                        data: [7, 10, 8, 14, 12, 15],
-                        backgroundColor: C.mid,
-                        borderSkipped: false,
-                        stack: 'tasks',
-                        barPercentage: 0.6,
-                    },
-                    {
-                        label: 'Scheduled',
-                        data: [3, 5, 5, 6, 5, 8],
-                        backgroundColor: C.bright,
-                        borderRadius: { topLeft: 6, topRight: 6, bottomLeft: 0, bottomRight: 0 },
-                        borderSkipped: false,
-                        stack: 'tasks',
-                        barPercentage: 0.6,
-                    },
-                    {
-                        label: 'Appointments',
-                        data: [10, 18, 14, 22, 19, 25],
-                        type: 'line',
-                        borderColor: C.mintDk,
-                        backgroundColor: C.mintA,
-                        borderWidth: 2.5,
-                        pointBackgroundColor: C.mintDk,
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 5,
-                        tension: 0.4,
-                        fill: true,
-                        stack: undefined,
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                interaction: { mode: 'index', intersect: false },
-                plugins: {
-                    legend: {
-                        labels: {
-                            font: { family: 'Outfit', size: 12 },
-                            color: C.muted,
-                            usePointStyle: true,
-                            pointStyleWidth: 8,
-                            padding: 16
-                        }
-                    },
-                    tooltip: TT
-                },
-                scales: {
-                    x: {
-                        stacked: true,
-                        grid: { display: false },
-                        border: { display: false },
-                        ticks: { font: { family: 'Outfit', size: 12 }, color: C.muted }
-                    },
-                    y: {
-                        stacked: true,
-                        grid: { color: 'rgba(35,25,66,0.05)', drawBorder: false },
-                        border: { display: false },
-                        ticks: { font: { family: 'Outfit', size: 12 }, color: C.muted }
-                    }
-                }
-            }
-        });
 
         /* ═══════════════════════════════════════════════════════════════════════
            VITALS MULTILINE CHART CONFIG
@@ -926,24 +824,35 @@
         document.addEventListener('DOMContentLoaded', function () {
 
             /* 1 ── Vitals chart — rebuild as multiline after external JS runs */
-            setTimeout(function () {
-                ['vitalsChart', 'dashVitalsChart'].forEach(function (id) {
+            requestAnimationFrame(() => {
+
+                const ids = ['vitalsChart', 'dashVitalsChart'];
+
+                ids.forEach((id) => {
                     const canvas = document.getElementById(id);
                     if (!canvas) return;
+
                     const existing = Chart.getChart(canvas);
-                    /* Only rebuild if external JS created a non-line chart */
-                    if (existing && existing.config.type !== 'line') {
-                        const lbl = existing.data.labels || [];
-                        const raw = existing.data.datasets;
-                        existing.destroy();
-                        new Chart(canvas, {
-                            type: 'line',
-                            data: { labels: lbl, datasets: makeVitalsDatasets(null) },
-                            options: vitalsChartOptions(true)
-                        });
-                    }
+                    if (!existing) return;
+
+                    const lbl = existing.data.labels || [];
+                    existing.destroy();
+
+                    new Chart(canvas, {
+                        type: 'line',
+                        data: {
+                            labels: lbl,
+                            datasets: makeVitalsDatasets(null)
+                        },
+                        options: {
+                            ...vitalsChartOptions(true),
+                            responsive: true,
+                            maintainAspectRatio: false
+                        }
+                    });
                 });
-            }, 200);
+
+            });
 
             /* 2 ── Symptoms chart — multicolored horizontal bars ───────────── */
             setTimeout(function () {
@@ -1144,6 +1053,7 @@
             });
         }
     </script>
+    <div id="toast"></div>
 
 </body>
 </html>

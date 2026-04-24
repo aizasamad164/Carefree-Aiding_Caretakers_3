@@ -7,48 +7,52 @@
 async function loadExps() {
     const pid = document.getElementById('e-patsel').value;
     const tb = document.querySelector('#exp-tbl tbody');
+    const balanceBox = document.getElementById('patient-balance-display');
 
     if (!pid) {
-        tb.innerHTML = `<tr><td colspan="5"><div class="empty">
-            <div class="empty-icon">💰</div>
-            <p>Select a patient to view expenses.</p>
-        </div></td></tr>`;
+        tb.innerHTML = '<tr><td colspan="5">Select a patient.</td></tr>';
+        balanceBox.innerText = "Rs. 0.00";
         return;
     }
 
     const r = await fetch(`/api/expenses/${pid}`);
-    const exps = await r.json();
+    const data = await r.json();
 
-    if (!exps.length) {
-        tb.innerHTML = `<tr><td colspan="5"><div class="empty">
-            <div class="empty-icon">💰</div>
-            <p>No expenses logged.</p>
-        </div></td></tr>`;
+    // Update the Balance Display using the calculated value from the API
+    const currentBal = data.calculated_balance;
+    balanceBox.innerText = `Rs. ${currentBal.toFixed(2)}`;
+
+    // UI Feedback: Red if negative, green if positive
+    balanceBox.style.color = currentBal < 0 ? "#e74c3c" : "#2ecc71";
+
+    if (!data.expenses.length) {
+        tb.innerHTML = '<tr><td colspan="5">No expenses logged.</td></tr>';
         return;
     }
 
-    tb.innerHTML = exps.map(e => `
+    tb.innerHTML = data.expenses.map(e => `
         <tr>
             <td><strong>${e.expense_name}</strong></td>
             <td><span class="badge b-tag">${e.expense_category}</span></td>
             <td>Rs. ${parseFloat(e.expense_amount).toFixed(2)}</td>
-            <td>${fdt(e.expense_time)}</td>
+            <td>${e.expense_time}</td>
             <td><button class="btn btn-danger btn-sm" onclick="delExp('${e.expense_id}')">Remove</button></td>
         </tr>`).join('');
 }
 
+
 async function addExp() {
     const pid = document.getElementById('e-patsel').value;
-    if (!pid) { toast('Select a patient first', 'err'); return }
+    if (!pid) { toast('Select a patient first', 'err'); return; }
 
-    const body = {
-        name: document.getElementById('ef-name').value.trim(),
-        category: document.getElementById('ef-cat').value,
-        amount: parseFloat(document.getElementById('ef-amt').value) || 0,
-        patient_id: pid,
-    };
+    const name = document.getElementById('ef-name').value.trim();
+    const amount = parseFloat(document.getElementById('ef-amt').value) || 0;
+    const cat = document.getElementById('ef-cat').value;
 
-    if (!body.name || !body.amount) { toast('Name and amount required', 'err'); return }
+    if (!name) { toast('Name is required', 'err'); return; }
+    if (amount <= 0) { toast('Amount must be greater than zero', 'err'); return; }  // ← blocks negative/zero
+
+    const body = { name, category: cat, amount, patient_id: pid };
 
     const r = await fetch('/api/expense', {
         method: 'POST',
@@ -58,8 +62,15 @@ async function addExp() {
 
     if (r.ok) {
         toast('Expense added');
+        // ── Clear fields ──
+        document.getElementById('ef-name').value = '';
+        document.getElementById('ef-amt').value = '';
+        document.getElementById('ef-cat').selectedIndex = 0;
         toggleSec('exp-form');
         loadExps();
+    } else {
+        const e = await r.json();
+        toast(e.detail || 'Error adding expense', 'err');
     }
 }
 

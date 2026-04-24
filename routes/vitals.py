@@ -1,4 +1,4 @@
-﻿import oracledb
+﻿import cx_Oracle as oracledb
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
 from models import VitalsCreate, VitalsUpdate
@@ -42,6 +42,8 @@ def get_vitals(pid: str, db=Depends(get_db)):
 # ── Create vitals ─────────────────────────────────────────────────────────────
 @router.post("/api/vitals")
 def create_vitals(v: VitalsCreate, db=Depends(get_db)):
+    validate_vitals(v);
+
     cur = db.cursor()
     try:
         # Accept category from either field name the frontend may send
@@ -91,6 +93,8 @@ def create_vitals(v: VitalsCreate, db=Depends(get_db)):
 # ── Update vitals ─────────────────────────────────────────────────────────────
 @router.put("/api/vitals/{vid}")
 def update_vitals(vid: int, v: VitalsUpdate, db=Depends(get_db)):
+    validate_vitals(v);
+
     cur = db.cursor()
     try:
         cur.execute("SELECT COUNT(*) FROM Vitals WHERE VitalsID=:1", (vid,))
@@ -129,14 +133,37 @@ def update_vitals(vid: int, v: VitalsUpdate, db=Depends(get_db)):
 def delete_vitals(vid: int, db=Depends(get_db)):
     cur = db.cursor()
     try:
-        cur.execute("DELETE FROM OtherVitals       WHERE VitalsID=:1", (vid,))
-        cur.execute("DELETE FROM RespiratoryVitals WHERE VitalsID=:1", (vid,))
-        cur.execute("DELETE FROM CardiacVitals      WHERE VitalsID=:1", (vid,))
-        cur.execute("DELETE FROM Vitals             WHERE VitalsID=:1", (vid,))
+        # Deleting this record automatically deletes the corresponding row 
+        # in CardiacVitals, RespiratoryVitals, or OtherVitals.
+        cur.execute("DELETE FROM Vitals WHERE VitalsID = :1", (vid,))
+        
         db.commit()
-        return {"message": "Vitals deleted"}
+        return {"message": "Vitals record and associated metrics deleted"}
     except Exception as e:
         db.rollback()
         raise HTTPException(500, f"Error: {str(e)}")
     finally:
         cur.close()
+
+
+def validate_vitals(v):
+    def check_positive(value, field_name):
+        if value is not None:
+            try:
+                if float(value) <= 0:
+                    raise HTTPException(400, f"{field_name} must be positive")
+            except:
+                raise HTTPException(400, f"{field_name} must be numeric")
+
+    # Cardiac
+    check_positive(v.pulse_rate, "Pulse rate")
+
+    # Blood pressure 
+    check_positive(v.blood_pressure, "Blood Pressure")
+    
+    # Respiratory
+    check_positive(v.respiratory_rate, "Respiratory rate")
+    check_positive(v.oxygen_sat, "Oxygen saturation")
+
+    # Other
+    check_positive(v.blood_glucose, "Blood glucose")

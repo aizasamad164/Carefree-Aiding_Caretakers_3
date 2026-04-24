@@ -93,12 +93,14 @@ body {
 
 .sb-name {
     font-family: 'Playfair Display', serif;
-    font-size: 19px;
-    color: var(--white)
+    font-size: 22px; /* Set one size for the whole brand name */
+    font-weight: 700;
+    color: white;
 }
 
     .sb-name span {
-        color: var(--purple)
+        font-size: 22px !important; /* Force 'free' to match exactly */
+        color: #a389f4; /* Your purple color */
     }
 
 .sb-user {

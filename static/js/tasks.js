@@ -7,6 +7,16 @@
 // - refresh endpoint called on panel load to update recurring task times
 //   and fire notifications for tasks due today
 
+// ── Track completed tasks in memory ──────────────────────────────────────────
+const completedTasks = new Set();
+
+async function completeTask(id) {
+    completedTasks.add(String(id)); 
+    loadTasks();
+    loadDonut();
+}
+
+
 async function loadTasks() {
     const pid = document.getElementById('t-patsel').value;
     const tb = document.querySelector('#task-tbl tbody');
@@ -58,10 +68,9 @@ async function addTask() {
         name: document.getElementById('tf-name').value.trim(),
         time: document.getElementById('tf-time').value,
         frequency: document.getElementById('tf-freq').value,
-        priority: document.getElementById('tf-pri').value,  // now a string: "High"/"Medium"/"Low"
+        priority: document.getElementById('tf-pri').value,
         description: document.getElementById('tf-desc').value.trim(),
         patient_id: pid,
-        // caretaker_id resolved server-side from PatientID — not sent from frontend
     };
 
     if (!body.name || !body.time) { toast('Name and time are required', 'err'); return }
@@ -74,14 +83,29 @@ async function addTask() {
 
     if (r.ok) {
         toast('Task added');
+
+        // ── RESET ALL FIELDS TO EMPTY ───────────────────────────────
+        document.getElementById('tf-name').value = '';
+        document.getElementById('tf-time').value = ''; // Returns to mm/dd/yyyy
+        document.getElementById('tf-desc').value = '';
+
+        // Reset dropdowns to the first option
+        document.getElementById('tf-freq').selectedIndex = 0;
+        document.getElementById('tf-pri').selectedIndex = 0;
+        // ─────────────────────────────────────────────────────────────
+
         toggleSec('task-form');
         loadTasks();
     }
 }
+
 
 async function delTask(id) {
     if (!confirm('Remove this task?')) return;
     const r = await fetch(`/api/task/${id}`, { method: 'DELETE' });
     if (r.ok) { toast('Task removed'); loadTasks(); }
 }
+
+
+
 

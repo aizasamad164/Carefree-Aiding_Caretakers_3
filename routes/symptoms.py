@@ -13,7 +13,7 @@ def get_master_symptoms(db=Depends(get_db)):
     try:
         cur.execute("""
             SELECT SymptomID, Name, Type, Description, Severity
-            FROM   SymptomMaster
+            FROM   Symptom
             ORDER BY Type, Name
         """)
         keys = ["symptom_id", "name", "type", "description", "severity"]
@@ -47,7 +47,7 @@ def get_symptoms(pid: str, db=Depends(get_db)):
             SELECT sm.SymptomID, sm.Name, sm.Type, sm.Description,
                    sm.Severity, ps.Recorded_Date, 'predefined' AS source
             FROM   PatientSymptom ps
-            JOIN   SymptomMaster sm ON sm.SymptomID = ps.SymptomID
+            JOIN   Symptom sm ON sm.SymptomID = ps.SymptomID
             WHERE  ps.PatientID = :1
             ORDER BY sm.Name
         """, (pid,))
@@ -77,7 +77,7 @@ def add_patient_symptom(s: PatientSymptomCreate, db=Depends(get_db)):
         if cur.fetchone()[0] == 0:
             raise HTTPException(404, "Patient not found")
 
-        cur.execute("SELECT COUNT(*) FROM SymptomMaster WHERE SymptomID=:1", (s.symptom_id,))
+        cur.execute("SELECT COUNT(*) FROM Symptom WHERE SymptomID=:1", (s.symptom_id,))
         if cur.fetchone()[0] == 0:
             raise HTTPException(404, "Symptom not found in master list")
 

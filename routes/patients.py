@@ -32,7 +32,7 @@ def get_patients(cid: str, db=Depends(get_db)):
                    g.Guardian_Name, g.Guardian_Contact,
                    g.Guardian_Comment, p.Balance, p.Charges
             FROM   Patient p
-            LEFT JOIN Guardian g ON g.PatientID = p.PatientID
+            LEFT JOIN Guardian g ON g.GuardianID = p.GuardianID
             WHERE  p.CaretakerID = :1
             ORDER BY p.Patient_Name
         """, (cid,))
@@ -53,7 +53,7 @@ def get_patient(pid: str, db=Depends(get_db)):
             SELECT p.*, g.GuardianID, g.Guardian_Name, g.Guardian_Password,
                    g.Guardian_Contact, g.Guardian_Comment, g.Relation_with_patient
             FROM   Patient p
-            LEFT JOIN Guardian g ON g.PatientID = p.PatientID
+            LEFT JOIN Guardian g ON g.GuardianID = p.GuardianID
             WHERE  p.PatientID = :1
         """, (pid,))
         row = cur.fetchone()
@@ -67,27 +67,30 @@ def get_patient(pid: str, db=Depends(get_db)):
 # ── Create patient + guardian ─────────────────────────────────────────────────
 @router.post("/api/patient")
 def create_patient(p: PatientCreate, db=Depends(get_db)):
+    validate_patient(p);
+
     cur = db.cursor()
     try:
         pid = gen_id("P", "Patient",  "PatientID",  db)
         gid = gen_id("G", "Guardian", "GuardianID", db)
         pw  = gen_pw()
 
+        # 1. Insert into Guardian FIRST (since Patient now depends on GuardianID)
+        cur.execute("""
+            INSERT INTO Guardian (GuardianID, Guardian_Name, Guardian_Password,
+                                  Guardian_Contact, Relation_with_patient)
+            VALUES (:1,:2,:3,:4,:5)
+        """, (gid, p.guardian_name, pw, p.guardian_contact, p.relation_with_patient))
+
+        # 2. Insert into Patient SECOND (including the GuardianID foreign key)
         cur.execute("""
             INSERT INTO Patient (PatientID, Patient_Name, Age, Gender,
                                  Height, Weight, Smoker, Children,
-                                 Region, CaretakerID)
-            VALUES (:1,:2,:3,:4,:5,:6,:7,:8,:9,:10)
+                                 Region, CaretakerID, GuardianID)
+            VALUES (:1,:2,:3,:4,:5,:6,:7,:8,:9,:10,:11)
         """, (pid, p.name, p.age, p.gender,
               p.height, p.weight, p.smoker, p.children,
-              p.region, p.caretaker_id))
-
-        cur.execute("""
-            INSERT INTO Guardian (GuardianID, Guardian_Name, Guardian_Password,
-                                  Guardian_Contact, Relation_with_patient, PatientID)
-            VALUES (:1,:2,:3,:4,:5,:6)
-        """, (gid, p.guardian_name, pw,
-              p.guardian_contact, p.relation_with_patient, pid))
+              p.region, p.caretaker_id, gid)) # <-- Added gid here
 
         db.commit()
         return {"patient_id": pid, "guardian_id": gid, "guardian_password": pw}
@@ -97,10 +100,11 @@ def create_patient(p: PatientCreate, db=Depends(get_db)):
     finally:
         cur.close()
 
-
 # ── Update patient + guardian ─────────────────────────────────────────────────
 @router.put("/api/patient/{pid}")
 def update_patient(pid: str, p: PatientUpdate, db=Depends(get_db)):
+    validate_patient(p);
+
     cur = db.cursor()
     try:
         cur.execute("""
@@ -117,7 +121,7 @@ def update_patient(pid: str, p: PatientUpdate, db=Depends(get_db)):
             UPDATE Guardian
             SET    Guardian_Name=:1, Guardian_Contact=:2,
                    Relation_with_patient=:3
-            WHERE  PatientID=:4
+            WHERE GuardianID = (SELECT GuardianID FROM Patient WHERE PatientID = :4)
         """, (p.guardian_name, p.guardian_contact,
               p.relation_with_patient, pid))
 
@@ -135,15 +139,12 @@ def update_patient(pid: str, p: PatientUpdate, db=Depends(get_db)):
 def delete_patient(pid: str, db=Depends(get_db)):
     cur = db.cursor()
     try:
-        cur.execute("DELETE FROM Guardian     WHERE PatientID  = :1", (pid,))
-        cur.execute("""DELETE FROM Notification WHERE CaretakerID =
-                       (SELECT CaretakerID FROM Patient WHERE PatientID = :1)""", (pid,))
-        cur.execute("DELETE FROM Task         WHERE PatientID  = :1", (pid,))
-        cur.execute("DELETE FROM Appointment  WHERE PatientID  = :1", (pid,))
-        cur.execute("DELETE FROM Expense      WHERE PatientID  = :1", (pid,))
-        cur.execute("DELETE FROM Patient      WHERE PatientID  = :1", (pid,))
+        # One delete to rule them all
+        # This triggers the cascade for Guardian, Task, Appointment, Expense, etc.
+        cur.execute("DELETE FROM Patient WHERE PatientID = :1", (pid,))
+        
         db.commit()
-        return {"message": "Patient deleted"}
+        return {"message": "Patient and all related records deleted successfully"}
     except Exception as e:
         db.rollback()
         raise HTTPException(500, f"Error deleting patient: {str(e)}")
@@ -154,18 +155,25 @@ def delete_patient(pid: str, db=Depends(get_db)):
 # ── Update guardian comment ───────────────────────────────────────────────────
 @router.put("/api/patient/{pid}/comment")
 def update_comment(pid: str, b: CommentBody, db=Depends(get_db)):
+    
     cur = db.cursor()
     try:
+        # We target Guardian table because that's where the column is in your DDL
+        # But we filter by looking up which Guardian belongs to this Patient
         cur.execute("""
             UPDATE Guardian
             SET    Guardian_Comment = :1
-            WHERE  PatientID = :2
+            WHERE  GuardianID = (SELECT GuardianID FROM Patient WHERE PatientID = :2)
         """, (b.comment, pid))
+        
+        if cur.rowcount == 0:
+            raise HTTPException(404, "Patient or Guardian not found")
+
         db.commit()
-        return {"message": "Comment saved"}
+        return {"message": "Comment saved successfully"}
     except Exception as e:
         db.rollback()
-        raise HTTPException(500, f"Error saving comment: {str(e)}")
+        raise HTTPException(500, f"Database error: {str(e)}")
     finally:
         cur.close()
 
@@ -219,10 +227,47 @@ def remove_balance(pid: str, b: BalanceBody, db=Depends(get_db)):
 def get_guardian_password(pid: str, db=Depends(get_db)):
     cur = db.cursor()
     try:
-        cur.execute("SELECT Guardian_Password FROM Guardian WHERE PatientID=:1", (pid,))
+        # We now join Patient and Guardian to find the password via PatientID
+        cur.execute("""
+            SELECT g.Guardian_Password 
+            FROM Guardian g
+            JOIN Patient p ON p.GuardianID = g.GuardianID
+            WHERE p.PatientID = :1
+        """, (pid,))
+        
         row = cur.fetchone()
         if not row:
             raise HTTPException(404, "Guardian not found for this patient")
         return {"password": row[0]}
     finally:
         cur.close()
+
+
+def validate_patient(p):
+    # Age → positive integer
+    if not isinstance(p.age, int) or p.age <= 0:
+        raise HTTPException(400, "Age must be a positive integer")
+
+    # Children → integer ≥ 0
+    if not isinstance(p.children, int) or p.children < 0:
+        raise HTTPException(400, "Children must be 0 or a positive integer")
+
+    # Height → positive number (allow float)
+    try:
+        if float(p.height) <= 0:
+            raise HTTPException(400, "Height must be a positive number")
+    except:
+        raise HTTPException(400, "Height must be numeric")
+
+    # Weight → positive number (allow float)
+    try:
+        if float(p.weight) <= 0:
+            raise HTTPException(400, "Weight must be a positive number")
+    except:
+        raise HTTPException(400, "Weight must be numeric")
+
+    # Contact → exactly 11 digits
+    if not (isinstance(p.guardian_contact, str) and 
+            p.guardian_contact.isdigit() and 
+            len(p.guardian_contact) == 11):
+        raise HTTPException(400, "Guardian contact must be exactly 11 digits")

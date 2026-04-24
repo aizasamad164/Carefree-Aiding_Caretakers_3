@@ -157,6 +157,13 @@ async function savePat() {
     const weight = document.getElementById('pi-weight').value;
     const gContact = document.getElementById('pi-gcontact').value.trim();
 
+    const isNumeric = /^\d+$/.test(gContact);
+
+    if (!isNumeric && gContact !== "") {
+        toast('Contact number must contain only digits (no letters or spaces)', 'err');
+        return; // Stops the function here
+    }
+
     // 2. STOPS the process if required fields are missing
     // Note: We check radio.gender and radio.smoker because they are stored in that global object
     if (!pName || !gName || !age || !height || !weight || !radio.gender || !radio.smoker || !gContact) {

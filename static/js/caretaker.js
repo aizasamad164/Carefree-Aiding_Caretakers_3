@@ -122,6 +122,32 @@ function nav(p) {
         document.getElementById('sym-patsel').value = '';
         loadSymptoms();
     }
+
+
+    if (p === 'stress') {
+        document.getElementById('s-sleep').value = '';
+        document.getElementById('s-qual').value = '';
+        document.getElementById('s-act').value = '';
+        document.getElementById('s-hr').value = '';
+        document.getElementById('s-steps').value = '';
+        document.getElementById('s-sys').value = '';
+        document.getElementById('s-dia').value = '';
+
+        document.getElementById('stress-val').textContent = '';
+        document.getElementById('stress-box').classList.remove('show');
+    }
+
+    if (p === 'cost') {
+        document.getElementById('c-age').value = '';
+        document.getElementById('c-bmi').value = '';
+        document.getElementById('c-children').value = '';
+        document.getElementById('c-sex').value = 'male';
+        document.getElementById('c-smoker').value = 'no';
+        document.getElementById('c-region').value = 'northeast';
+
+        document.getElementById('cost-val').textContent = '';
+        document.getElementById('cost-box').classList.remove('show');
+    }
 }
 
 // ── Logout ────────────────────────────────────────────────────────────────────

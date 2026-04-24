@@ -29,23 +29,45 @@ def get_exp_stats(cid: str, db=Depends(get_db)):
 def get_expenses(pid: str, db=Depends(get_db)):
     cur = db.cursor()
     try:
+        # 1. Get the starting Balance from the Patient table
+        cur.execute("SELECT Balance FROM Patient WHERE PatientID = :1", (pid,))
+        p_row = cur.fetchone()
+        if not p_row:
+            raise HTTPException(404, "Patient not found")
+        initial_balance = p_row[0] or 0
+
+        # 2. Get all expenses for this patient
         cur.execute("""
             SELECT ExpenseID, Expense_Name, Expense_Category,
-                   Expense_Amount, Expense_Time, PatientID
+                   Expense_Amount, Expense_Time
             FROM   Expense
             WHERE  PatientID = :1
             ORDER BY Expense_Time DESC
         """, (pid,))
         rows = cur.fetchall()
-        keys = ["expense_id", "expense_name", "expense_category",
-                "expense_amount", "expense_time", "patient_id"]
-        result = []
+        
+        expense_list = []
+        total_spent = 0
+        
         for r in rows:
-            d = {keys[i]: r[i] for i in range(len(keys))}
-            if isinstance(d["expense_time"], datetime):
-                d["expense_time"] = d["expense_time"].strftime("%Y-%m-%d %H:%M")
-            result.append(d)
-        return result
+            # Add to the sum of expenses
+            total_spent += r[3] # Expense_Amount
+            
+            expense_list.append({
+                "expense_id": r[0],
+                "expense_name": r[1],
+                "expense_category": r[2],
+                "expense_amount": r[3],
+                "expense_time": r[4].strftime("%Y-%m-%d %H:%M") if isinstance(r[4], datetime) else r[4]
+            })
+
+        # 3. Apply the Formula: Balance - Sum(Expenses)
+        final_remaining = initial_balance - total_spent
+
+        return {
+            "expenses": expense_list,
+            "calculated_balance": round(final_remaining, 2)
+        }
     finally:
         cur.close()
 
@@ -76,12 +98,6 @@ def create_expense(e: ExpCreate, db=Depends(get_db)):
                 SELECT NVL(SUM(Expense_Amount),0) FROM Expense WHERE PatientID=:1)
             WHERE PatientID=:2
         """, (e.patient_id, e.patient_id))
-
-        send_notification(
-            db, cid,
-            name=f"New Expense: {e.name}",
-            description=f"Rs. {e.amount} added for {pname}"
-        )
 
         db.commit()
         return {"message": "Expense added", "expense_id": eid}
@@ -121,3 +137,4 @@ def delete_expense(eid: str, db=Depends(get_db)):
         raise HTTPException(500, f"Error deleting expense: {str(e)}")
     finally:
         cur.close()
+

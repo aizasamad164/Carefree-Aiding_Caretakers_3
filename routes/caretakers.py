@@ -26,6 +26,9 @@ def gen_pw(n=8):
 # ── Signup (create caretaker) ─────────────────────────────────────────────────
 @router.post("/api/caretaker")
 def create_caretaker(c: CaretakerCreate, db=Depends(get_db)):
+    if c.contact and not c.contact.isdigit():
+        raise HTTPException(status_code=400, detail="Contact number must contain only digits.")
+
     cur = db.cursor()
     try:
         cid = gen_id(db)
@@ -78,6 +81,9 @@ def get_caretaker(cid: str, db=Depends(get_db)):
 # ── Update caretaker profile ──────────────────────────────────────────────────
 @router.put("/api/caretaker/{cid}")
 def update_caretaker(cid: str, c: CaretakerUpdate, db=Depends(get_db)):
+    if c.contact and not c.contact.isdigit():
+        raise HTTPException(status_code=400, detail="Contact number must contain only digits.")
+
     cur = db.cursor()
     try:
         cur.execute("""

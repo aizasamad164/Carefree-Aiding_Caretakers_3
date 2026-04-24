@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e980fc"/>
+      <stop offset="100%" stop-color="#3d1f5e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- background -->
+  <rect width="24" height="24" rx="5" fill="url(#bg)"/>
+
+  <!-- centered heart (slightly bigger, perfectly aligned) -->
+  <path 
+    fill="#ffffff"
+    transform="translate(0,0) scale(0.92)"
+    d="M12 21.2C10.5 20 4 14.8 4 9.5C4 6.5 6.2 4.5 9 4.5c1.8 0 3.4 1 4 2.5c0.6-1.5 2.2-2.5 4-2.5c2.8 0 5 2 5 5c0 5.3-6.5 10.5-8 11.7z"/>
+</svg>

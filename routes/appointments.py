@@ -1,5 +1,5 @@
 import random
-import oracledb
+import cx_Oracle as oracledb
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
 from models import ApptCreate
@@ -94,6 +94,15 @@ def get_appts(pid: str, filter: str = "All", db=Depends(get_db)):
 # ── Create appointment ────────────────────────────────────────────────────────
 @router.post("/api/appointment")
 def create_appt(a: ApptCreate, db=Depends(get_db)):
+    appt_dt = datetime.fromisoformat(a.datetime_val.replace('Z', ''))
+    
+    # 2. VALIDATION: Check if the time is in the past
+    if appt_dt < datetime.now():
+        raise HTTPException(
+            status_code=400, 
+            detail="Appointments cannot be scheduled in the past."
+        )
+
     cur = db.cursor()
     try:
         cur.execute("SELECT CaretakerID, Patient_Name FROM Patient WHERE PatientID=:1", (a.patient_id,))
@@ -150,21 +159,21 @@ def create_appt(a: ApptCreate, db=Depends(get_db)):
         cur.close()
 
 
-# ── Delete appointment ────────────────────────────────────────────────────────
+# ── Delete appointment ─────────────────────────────────────────────
 @router.delete("/api/appointment/{aid}")
 def delete_appt(aid: int, db=Depends(get_db)):
     cur = db.cursor()
     try:
-        cur.execute("DELETE FROM Notification WHERE AppointmentID=:1", (aid,))
-        cur.execute("DELETE FROM Appointment  WHERE AppointmentID=:1", (aid,))
+        # This triggers the cascade to the Notification table automatically
+        cur.execute("DELETE FROM Appointment WHERE AppointmentID = :1", (aid,))
+        
         db.commit()
-        return {"message": "Appointment deleted"}
+        return {"message": "Appointment and related notifications deleted"}
     except Exception as e:
         db.rollback()
         raise HTTPException(500, f"Delete error: {str(e)}")
     finally:
         cur.close()
-
 
 # ── Get doctors for caretaker ─────────────────────────────────────────────────
 @router.get("/api/doctors/{cid}")
