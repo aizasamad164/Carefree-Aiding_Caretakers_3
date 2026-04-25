@@ -71,6 +71,13 @@ def create_patient(p: PatientCreate, db=Depends(get_db)):
 
     cur = db.cursor()
     try:
+        # 1. SIMPLE CHECK: Does this contact exist anywhere in the Guardian table?
+        cur.execute("SELECT GuardianID FROM Guardian WHERE Guardian_Contact = :1", (p.guardian_contact,))
+        
+        duplicate_contact = cur.fetchone()
+        if duplicate_contact:
+            raise HTTPException(status_code=400, detail="This contact number is already assigned to another guardian.")
+
         pid = gen_id("P", "Patient",  "PatientID",  db)
         gid = gen_id("G", "Guardian", "GuardianID", db)
         pw  = gen_pw()
@@ -94,19 +101,43 @@ def create_patient(p: PatientCreate, db=Depends(get_db)):
 
         db.commit()
         return {"patient_id": pid, "guardian_id": gid, "guardian_password": pw}
+    except HTTPException as he:
+        # 1. This catches the 400 error you raised for the duplicate contact
+        # It lets it "pass through" to the frontend exactly as it is.
+        raise he 
+
     except Exception as e:
+        # 2. This catches unexpected stuff (like database connection issues)
         db.rollback()
-        raise HTTPException(500, f"Error creating patient: {str(e)}")
+        raise HTTPException(500, f"System Error: {str(e)}")
+
     finally:
         cur.close()
 
 # ── Update patient + guardian ─────────────────────────────────────────────────
 @router.put("/api/patient/{pid}")
 def update_patient(pid: str, p: PatientUpdate, db=Depends(get_db)):
-    validate_patient(p);
-
+    validate_patient(p)
     cur = db.cursor()
     try:
+        # Get current guardian ID for this patient
+        cur.execute("SELECT GuardianID FROM Patient WHERE PatientID=:1", (pid,))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(404, "Patient not found")
+        current_gid = row[0]
+
+        # Check if new contact is used by a DIFFERENT guardian
+        cur.execute("""
+            SELECT GuardianID FROM Guardian
+            WHERE  Guardian_Contact = :1
+              AND  GuardianID != :2
+        """, (p.guardian_contact, current_gid))
+
+        if cur.fetchone():
+            raise HTTPException(400, "This contact number is already assigned to another guardian.")
+
+        # Update patient
         cur.execute("""
             UPDATE Patient
             SET    Patient_Name=:1, Age=:2, Gender=:3,
@@ -117,19 +148,23 @@ def update_patient(pid: str, p: PatientUpdate, db=Depends(get_db)):
               p.height, p.weight, p.smoker,
               p.children, p.region, pid))
 
+        # Update guardian — name AND contact both updated
         cur.execute("""
             UPDATE Guardian
-            SET    Guardian_Name=:1, Guardian_Contact=:2,
+            SET    Guardian_Name=:1,
+                   Guardian_Contact=:2,
                    Relation_with_patient=:3
-            WHERE GuardianID = (SELECT GuardianID FROM Patient WHERE PatientID = :4)
+            WHERE  GuardianID=:4
         """, (p.guardian_name, p.guardian_contact,
-              p.relation_with_patient, pid))
+              p.relation_with_patient, current_gid))
 
         db.commit()
         return {"message": "Updated"}
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
-        raise HTTPException(500, f"Error updating patient: {str(e)}")
+        raise HTTPException(500, f"System Error: {str(e)}")
     finally:
         cur.close()
 
