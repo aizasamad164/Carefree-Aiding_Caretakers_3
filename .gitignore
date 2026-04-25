@@ -1,7 +1,5 @@
-.venv/
-__pycache__/ 
-carefree.db 
-config.py 
-.vs/
+venv/
+__pycache__/
 carefree.db
 config.py
+.vs/
