@@ -1,4 +1,4 @@
-﻿from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
 from models import PatientSymptomCreate, CustomSymptomCreate
 from datetime import datetime
@@ -6,7 +6,7 @@ from datetime import datetime
 router = APIRouter()
 
 
-# ── Get master list (for dropdown) — MUST be before /{pid} ───────────────────
+# -- Get master list (for dropdown) � MUST be before /{pid} -------------------
 @router.get("/api/symptoms/master")
 def get_master_symptoms(db=Depends(get_db)):
     cur = db.cursor()
@@ -22,7 +22,7 @@ def get_master_symptoms(db=Depends(get_db)):
         cur.close()
 
 
-# ── Get all symptoms for a patient (linked + custom) ─────────────────────────
+# -- Get all symptoms for a patient (linked + custom) -------------------------
 @router.get("/api/symptoms/{pid}")
 def get_symptoms(pid: str, db=Depends(get_db)):
     cur = db.cursor()
@@ -42,7 +42,7 @@ def get_symptoms(pid: str, db=Depends(get_db)):
                 d["recorded_date"] = d["recorded_date"].strftime("%Y-%m-%d %H:%M")
             return d
 
-        # Predefined — joined from master via bridge table
+        # Predefined � joined from master via bridge table
         cur.execute("""
             SELECT sm.SymptomID, sm.Name, sm.Type, sm.Description,
                    sm.Severity, ps.Recorded_Date, 'predefined' AS source
@@ -53,7 +53,7 @@ def get_symptoms(pid: str, db=Depends(get_db)):
         """, (pid,))
         predefined = [read_row(r) for r in cur.fetchall()]
 
-        # Custom — freeform per patient
+        # Custom � freeform per patient
         cur.execute("""
             SELECT CustomSymptomID, Name, Type, Description,
                    Severity, Recorded_Date, 'custom' AS source
@@ -68,7 +68,7 @@ def get_symptoms(pid: str, db=Depends(get_db)):
         cur.close()
 
 
-# ── Link master symptom to patient ───────────────────────────────────────────
+# -- Link master symptom to patient -------------------------------------------
 @router.post("/api/symptom/predefined")
 def add_patient_symptom(s: PatientSymptomCreate, db=Depends(get_db)):
     cur = db.cursor()
@@ -97,7 +97,7 @@ def add_patient_symptom(s: PatientSymptomCreate, db=Depends(get_db)):
         cur.close()
 
 
-# ── Add custom symptom ────────────────────────────────────────────────────────
+# -- Add custom symptom --------------------------------------------------------
 @router.post("/api/symptom/custom")
 def add_custom_symptom(s: CustomSymptomCreate, db=Depends(get_db)):
     cur = db.cursor()
@@ -123,7 +123,7 @@ def add_custom_symptom(s: CustomSymptomCreate, db=Depends(get_db)):
         cur.close()
 
 
-# ── Unlink predefined symptom from patient ────────────────────────────────────
+# -- Unlink predefined symptom from patient ------------------------------------
 @router.delete("/api/symptom/predefined/{pid}/{sid}")
 def remove_patient_symptom(pid: str, sid: str, db=Depends(get_db)):
     cur = db.cursor()
@@ -145,7 +145,7 @@ def remove_patient_symptom(pid: str, sid: str, db=Depends(get_db)):
         cur.close()
 
 
-# ── Delete custom symptom ─────────────────────────────────────────────────────
+# -- Delete custom symptom -----------------------------------------------------
 @router.delete("/api/symptom/custom/{cid}")
 def delete_custom_symptom(cid: int, db=Depends(get_db)):
     cur = db.cursor()

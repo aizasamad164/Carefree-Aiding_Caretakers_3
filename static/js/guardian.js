@@ -56,7 +56,7 @@ async function loadPatInfo() {
 
     document.getElementById('pi-name-hd').textContent = p.patient_name || 'Patient Profile';
 
-    const fields = [      
+    const fields = [
         ['Name', p.patient_name],
         ['Age', p.age],
         ['Gender', p.gender],
@@ -129,7 +129,8 @@ async function loadFinances() {
     document.getElementById('bal-charges').textContent = `Rs. ${(p.charges || 0).toFixed(2)}`;
 
     const exr = await fetch(`/api/expenses/${PID}`);
-    const exps = await exr.json();
+    const expsData = await exr.json();
+    const exps = expsData.expenses || expsData || [];
     const tb = document.querySelector('#exp-tbl tbody');
 
     if (!exps.length) {
@@ -152,7 +153,7 @@ async function loadFinances() {
 
 async function sendBalance() {
     const amt = parseFloat(document.getElementById('funds-input').value);
-    
+
     const r = await fetch(`/api/patient/${PID}/balance/add`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },

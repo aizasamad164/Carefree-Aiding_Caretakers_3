@@ -1,4 +1,4 @@
-﻿import cx_Oracle as oracledb
+import oracledb
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
 from models import VitalsCreate, VitalsUpdate
@@ -7,7 +7,7 @@ from datetime import datetime
 router = APIRouter()
 
 
-# ── Get all vitals for a patient ──────────────────────────────────────────────
+# -- Get all vitals for a patient ----------------------------------------------
 @router.get("/api/vitals/{pid}")
 def get_vitals(pid: str, db=Depends(get_db)):
     cur = db.cursor()
@@ -39,7 +39,7 @@ def get_vitals(pid: str, db=Depends(get_db)):
         cur.close()
 
 
-# ── Create vitals ─────────────────────────────────────────────────────────────
+# -- Create vitals -------------------------------------------------------------
 @router.post("/api/vitals")
 def create_vitals(v: VitalsCreate, db=Depends(get_db)):
     validate_vitals(v);
@@ -59,7 +59,7 @@ def create_vitals(v: VitalsCreate, db=Depends(get_db)):
         raw = vid_var.getvalue()
         vid = int(raw[0] if isinstance(raw, list) else raw)
 
-        # Only insert cardiac row if at least one cardiac value is present —
+        # Only insert cardiac row if at least one cardiac value is present �
         # inserting an all-NULL row creates an orphan that breaks the JOIN on read.
         if v.pulse_rate is not None or v.blood_pressure is not None:
             cur.execute("""
@@ -90,7 +90,7 @@ def create_vitals(v: VitalsCreate, db=Depends(get_db)):
         cur.close()
 
 
-# ── Update vitals ─────────────────────────────────────────────────────────────
+# -- Update vitals -------------------------------------------------------------
 @router.put("/api/vitals/{vid}")
 def update_vitals(vid: int, v: VitalsUpdate, db=Depends(get_db)):
     validate_vitals(v);
@@ -128,7 +128,7 @@ def update_vitals(vid: int, v: VitalsUpdate, db=Depends(get_db)):
         cur.close()
 
 
-# ── Delete vitals ─────────────────────────────────────────────────────────────
+# -- Delete vitals -------------------------------------------------------------
 @router.delete("/api/vitals/{vid}")
 def delete_vitals(vid: int, db=Depends(get_db)):
     cur = db.cursor()

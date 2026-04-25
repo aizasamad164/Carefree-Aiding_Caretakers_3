@@ -139,10 +139,18 @@ def update_patient(pid: str, p: PatientUpdate, db=Depends(get_db)):
 def delete_patient(pid: str, db=Depends(get_db)):
     cur = db.cursor()
     try:
-        # One delete to rule them all
-        # This triggers the cascade for Guardian, Task, Appointment, Expense, etc.
-        cur.execute("DELETE FROM Patient WHERE PatientID = :1", (pid,))
-        
+        # Get guardian ID before deleting patient so we can clean up the orphan
+        cur.execute("SELECT GuardianID FROM Patient WHERE PatientID=:1", (pid,))
+        row = cur.fetchone()
+        gid = row[0] if row else None
+
+        # Delete patient — cascades to Task, Appointment, Expense, Notification etc.
+        cur.execute("DELETE FROM Patient WHERE PatientID=:1", (pid,))
+
+        # Delete the linked Guardian record (FK is ON DELETE SET NULL so it won't auto-delete)
+        if gid:
+            cur.execute("DELETE FROM Guardian WHERE GuardianID=:1", (gid,))
+
         db.commit()
         return {"message": "Patient and all related records deleted successfully"}
     except Exception as e:

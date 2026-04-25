@@ -1,5 +1,5 @@
 import random
-import cx_Oracle as oracledb
+import oracledb
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
 from models import TaskCreate
@@ -132,8 +132,9 @@ def get_tasks(pid: str, filter: str = "All", db=Depends(get_db)):
             if isinstance(d["task_time"], datetime):
                 dt = d["task_time"]
                 display_dt = get_next_notification_time(dt, d["task_frequency"]) or dt
-                if filter == "Today"  and display_dt.date() != now.date(): continue
-                if filter == "Weekly" and not (0 <= (display_dt.date() - now.date()).days < 7): continue
+                if filter == "Today"   and display_dt.date() != now.date(): continue
+                if filter == "Weekly"  and not (0 <= (display_dt.date() - now.date()).days < 7): continue
+                if filter == "Monthly" and (display_dt.year != now.year or display_dt.month != now.month): continue
                 d["task_time"] = display_dt.strftime("%Y-%m-%d %H:%M")
             result.append(d)
         return result

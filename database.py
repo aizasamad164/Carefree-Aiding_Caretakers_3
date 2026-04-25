@@ -1,4 +1,4 @@
-import cx_Oracle as oracledb
+import oracledb
 from config import (DB_HOST, DB_PORT, DB_SERVICE, DB_USER, DB_PASSWORD,
                     DB_MODE, USE_CLOUD, WALLET_DIR, WALLET_PASSWORD)
 

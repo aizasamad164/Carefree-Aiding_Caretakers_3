@@ -121,7 +121,6 @@ def get_notifications(cid: str, db=Depends(get_db)):
 
 # ── Dismiss notification + reschedule recurring tasks ────────────────────────
 @router.post("/api/notification/dismiss/{nid}")
-@router.post("/api/notification/dismiss/{nid}")
 def dismiss_notification(nid: int, db=Depends(get_db)):
     cur = db.cursor()
     try:
@@ -143,38 +142,6 @@ def create_notification(n: NotifCreate, db=Depends(get_db)):
     db.commit()
     return {"message": "Notification added"}
 
-
-# ── Get notifications for a specific patient (Guardian Portal) ───────────────
-@router.get("/api/notifications/guardian/{pid}")
-def get_guardian_notifications(pid: str, db=Depends(get_db)):
-    cur = db.cursor()
-    try:
-        # Join with Task and Appointment to find notifications belonging to THIS patient
-        # We also check (CURRENT_TIMESTAMP + 1) to give that 24hr lead time
-        cur.execute("""
-            SELECT n.NotificationID, n.Notif_Time, n.Notif_Name, 
-                   n.Notif_Description, n.AppointmentID, n.TaskID
-            FROM   Notification n
-            LEFT JOIN Task t ON n.TaskID = t.TaskID
-            LEFT JOIN Appointment a ON n.AppointmentID = a.AppointmentID
-            WHERE  (t.PatientID = :1 OR a.PatientID = :1)
-              AND  n.Notif_Time <= (CURRENT_TIMESTAMP + INTERVAL '1' DAY)
-              AND  n.Is_Sent = 0
-            ORDER BY n.Notif_Time DESC
-        """, (pid,))
-        
-        rows = cur.fetchall()
-        result = []
-        for r in rows:
-            result.append({
-                "notification_id": r[0],
-                "notif_time": r[1].strftime("%Y-%m-%d %H:%M") if r[1] else "",
-                "notif_name": r[2],
-                "notif_description": r[3]
-            })
-        return result
-    finally:
-        cur.close()
 
 # ── Delete notification ───────────────────────────────────────────────────────
 @router.delete("/api/notification/{nid}")

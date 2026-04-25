@@ -65,6 +65,14 @@ function filterPats() {
     }
 }
 
+// ── Search wrapper — called from HTML oninput ────────────────────────────────
+function filterPatientsByPrefix(val) {
+    if (document.getElementById('gsearch')) {
+        document.getElementById('gsearch').value = val;
+    }
+    filterPats();
+}
+
 function selPat(row, pid) {
     document.querySelectorAll('#pat-tbl tbody tr').forEach(r => r.classList.remove('selected'));
     row.classList.add('selected');
@@ -77,7 +85,7 @@ async function removeSelectedPat() {
     if (!selPatId) { toast('Select a patient row first', 'err'); return }
     if (!confirm('Delete this patient and all their data?')) return;
     const r = await fetch(`/api/patient/${selPatId}`, { method: 'DELETE' });
-    if (r.ok) { toast('Patient removed'); selPatId = null; loadPats(); }
+    if (r.ok) { toast('Patient removed'); selPatId = null; loadPats(); loadDash(); }
 }
 
 

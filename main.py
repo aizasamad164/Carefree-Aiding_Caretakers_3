@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse
 from routes import (auth, patients, caretakers, tasks, appointments,
                     expenses, notifications, predictions, vitals, symptoms)
 from config import DB_HOST, DB_PORT, DB_SERVICE, DB_USER, DB_PASSWORD
-import cx_Oracle as oracledb
+import oracledb
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(title="Carefree API", version="5.0 — Normalized Oracle Edition")

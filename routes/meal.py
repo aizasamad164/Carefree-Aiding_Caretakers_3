@@ -1,11 +1,11 @@
-﻿from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
 from models import MealCreate, MealUpdate
 
 router = APIRouter()
 
 
-# ── Create tables if not exist ────────────────────────────────────────────────
+# -- Create tables if not exist ------------------------------------------------
 #def create_meal_tables(db):
 #    cur = db.cursor()
 
@@ -58,7 +58,7 @@ router = APIRouter()
 #"""
 
 
-# ── Get all meals for a plan ──────────────────────────────────────────────────
+# -- Get all meals for a plan --------------------------------------------------
 @router.get("/api/meals/{plan_id}")
 def get_meals(plan_id: str, db=Depends(get_db)):
     cur = db.cursor()
@@ -83,7 +83,7 @@ def get_meals(plan_id: str, db=Depends(get_db)):
     return result
 
 
-# ── Get single meal ───────────────────────────────────────────────────────────
+# -- Get single meal -----------------------------------------------------------
 @router.get("/api/meal/{meal_id}")
 def get_meal(meal_id: str, db=Depends(get_db)):
     cur = db.cursor()
@@ -104,7 +104,7 @@ def get_meal(meal_id: str, db=Depends(get_db)):
     return meal
 
 
-# ── Create meal ───────────────────────────────────────────────────────────────
+# -- Create meal ---------------------------------------------------------------
 @router.post("/api/meal")
 def create_meal(m: MealCreate, db=Depends(get_db)):
     cur = db.cursor()
@@ -116,12 +116,12 @@ def create_meal(m: MealCreate, db=Depends(get_db)):
         VALUES (:1,:2,:3,:4)
     """, (meal_id, m.name, m.flag or "OK", m.plan_id))
 
-    # Insert ingredients — one row per ingredient (1NF)
+    # Insert ingredients � one row per ingredient (1NF)
     for ingredient in m.ingredients:
         cur.execute("INSERT INTO MealIngredient (MealID, Ingredient) VALUES (:1,:2)",
                     (meal_id, ingredient.strip()))
 
-    # Insert nutrition — one row per nutrient (1NF)
+    # Insert nutrition � one row per nutrient (1NF)
     for nutrient, value in m.nutrition.items():
         cur.execute("INSERT INTO MealNutrition (MealID, Nutrient, Value) VALUES (:1,:2,:3)",
                     (meal_id, nutrient.strip(), value))
@@ -130,7 +130,7 @@ def create_meal(m: MealCreate, db=Depends(get_db)):
     return {"message": "Meal created", "meal_id": meal_id}
 
 
-# ── Update meal ───────────────────────────────────────────────────────────────
+# -- Update meal ---------------------------------------------------------------
 @router.put("/api/meal/{meal_id}")
 def update_meal(meal_id: str, m: MealUpdate, db=Depends(get_db)):
     cur = db.cursor()
@@ -160,7 +160,7 @@ def update_meal(meal_id: str, m: MealUpdate, db=Depends(get_db)):
     return {"message": "Meal updated"}
 
 
-# ── Delete meal ───────────────────────────────────────────────────────────────
+# -- Delete meal ---------------------------------------------------------------
 @router.delete("/api/meal/{meal_id}")
 def delete_meal(meal_id: str, db=Depends(get_db)):
     cur = db.cursor()

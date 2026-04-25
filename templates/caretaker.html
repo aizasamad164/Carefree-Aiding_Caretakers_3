@@ -58,7 +58,6 @@
             </div>
         </header>
 
-        <!-- Notification panel -->
         <div class="notif-overlay" id="notif-overlay" onclick="toggleNotif()"></div>
         <div class="notif-panel" id="notif-panel">
             <div class="notif-header">
@@ -101,35 +100,13 @@
                     </div>
                 </div>
 
-                <!-- ── Charts Row ── -->
-                <div style="display:grid;grid-template-columns:1fr 2fr;gap:18px;margin-bottom:20px">
-                    <div class="card" style="margin-bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-                        <div class="card-hd" style="width:100%">
-                            <div class="card-ttl">Task Progress</div>
-                        </div>
-                        <div style="position:relative;width:180px;height:180px;margin:8px auto 0">
-                            <canvas id="donutChart" width="180" height="180"></canvas>
-                            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-                                <div id="donutPct" style="font-family:'Playfair Display',serif;font-size:28px;color:#231942;font-weight:700">0%</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Stacked Bar + Line -->
-                    <div class="card" style="margin-bottom:0">
-                        <div class="card-hd">
-                            <div class="card-ttl">Weekly Overview</div>
-                        </div>
-                        <canvas id="barChart" height="140"></canvas>
-                    </div>
-
-                </div>
-
-                <!-- Patients Table -->
                 <div class="card">
                     <div class="card-hd">
                         <div class="card-ttl">Patients Under Your Care</div>
-                        <button class="btn btn-ghost btn-sm" onclick="nav('patients')">View All →</button>
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <span id="dash-selected-label" style="font-family:'Outfit',sans-serif;font-size:11px;color:var(--muted)">Click a row to view insights</span>
+                            <button class="btn btn-ghost btn-sm" onclick="nav('patients')">View All →</button>
+                        </div>
                     </div>
                     <div class="tbl-wrap">
                         <table id="dash-tbl">
@@ -139,14 +116,47 @@
                     </div>
                 </div>
 
-                <!-- Vitals Overview — multiline line chart -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:20px">
+                    <div class="card" style="margin-bottom:0;display:flex;flex-direction:column;align-items:center">
+                        <div class="card-hd" style="width:100%">
+                            <div class="card-ttl">Task Priorities</div>
+                            <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif" id="insight-patient-label">All patients</span>
+                        </div>
+                        <div style="position:relative;width:160px;height:160px;margin:4px auto 0">
+                            <canvas id="taskPriorityDonut" width="160" height="160"></canvas>
+                            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+                                <div style="font-family:'Playfair Display',serif;font-size:22px;color:#231942;font-weight:700" id="taskTotalCount">0</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:#5a4d5e">tasks</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:12px;margin-top:12px;font-family:'Outfit',sans-serif;font-size:11px;color:#5a4d5e;flex-wrap:wrap;justify-content:center">
+                            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#231942;margin-right:4px"></span>High</span>
+                            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#b96ac9;margin-right:4px"></span>Medium</span>
+                            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#a8f0e0;margin-right:4px"></span>Low</span>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-bottom:0">
+                        <div class="card-hd">
+                            <div class="card-ttl">Appointments</div>
+                            <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif">By category · hover for dates</span>
+                        </div>
+                        <canvas id="apptCategoryChart" height="160"></canvas>
+                    </div>
+                    <div class="card" style="margin-bottom:0">
+                        <div class="card-hd">
+                            <div class="card-ttl">Expenses</div>
+                            <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif">By category</span>
+                        </div>
+                        <canvas id="expCategoryChart" height="160"></canvas>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-hd">
                         <div class="card-ttl">Vitals Overview</div>
                         <button class="btn btn-ghost btn-sm" onclick="nav('vitals')">View All →</button>
                     </div>
-
-                    <div class="chart-container" style="position: relative; height: 350px; width: 100%;">
+                    <div class="chart-container" style="position:relative;height:350px;width:100%">
                         <div id="dash-vitals-placeholder" class="chart-empty" style="display:none">
                             <span style="font-size:32px">🫀</span>
                             <span>No vitals recorded yet</span>
@@ -187,9 +197,7 @@
                     </div>
                     <div style="margin-bottom:14px">
                         <label class="lbl">Select existing patient to edit (or fill form below for new)</label>
-                        <select id="pi-sel" onchange="loadPatIntoForm()" style="max-width:300px">
-                            <option value="">— New Patient —</option>
-                        </select>
+                        <select id="pi-sel" onchange="loadPatIntoForm()" style="max-width:300px"><option value="">— New Patient —</option></select>
                     </div>
                     <div class="form-grid">
                         <div class="field"><label class="lbl">Patient Name</label><input id="pi-name" placeholder="Full name" /></div>
@@ -225,14 +233,12 @@
                         <div class="field"><label class="lbl">Relation to Patient</label><input id="pi-grelation" placeholder="e.g. Father, Mother, Sibling" /></div>
                         <div class="field f-full"><label class="lbl">Notes</label><textarea id="pi-notes" placeholder="Additional notes…"></textarea></div>
                     </div>
-
                     <div id="pi-pw-section" style="margin-top:18px;padding-top:18px;border-top:1px solid var(--cream3);display:block;">
                         <div style="display:flex;align-items:center;justify-content:space-between">
                             <div style="font-size:13px;font-weight:600">Guardian Access</div>
                             <button id="show-pw-btn" type="button" class="btn btn-primary btn-sm">🔑 Show Password</button>
                         </div>
                     </div>
-
                     <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--cream3)">
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
                             <div style="font-size:13px;font-weight:600">Insurance Cost Prediction</div>
@@ -316,9 +322,7 @@
                     <div class="form-grid">
                         <div class="field f-full">
                             <label class="lbl">Select Existing Doctor</label>
-                            <select id="af-doc-select" onchange="onDoctorSelect()" style="width:100%">
-                                <option value="NEW">-- Add New Doctor --</option>
-                            </select>
+                            <select id="af-doc-select" onchange="onDoctorSelect()" style="width:100%"><option value="NEW">-- Add New Doctor --</option></select>
                         </div>
                         <div class="field"><label class="lbl">Doctor Name</label><input id="af-doctor" placeholder="Dr. full name" /></div>
                         <div class="field"><label class="lbl">Specialization</label><input id="af-spec" placeholder="e.g. Cardiologist" /></div>
@@ -357,7 +361,6 @@
                     <select id="e-patsel" onchange="loadExps()"><option value="">— Select Patient —</option></select>
                     <button class="btn btn-gold btn-sm" onclick="toggleSec('exp-form')">+ Add Expense</button>
                 </div>
-
                 <div class="exp-section" id="exp-form">
                     <div style="font-size:13px;font-weight:600;margin-bottom:14px">New Expense</div>
                     <div class="form-grid g3">
@@ -379,7 +382,6 @@
                         <button class="btn btn-ghost btn-sm" onclick="toggleSec('exp-form')">Cancel</button>
                     </div>
                 </div>
-
                 <div class="card">
                     <div class="tbl-wrap">
                         <table id="exp-tbl">
@@ -387,13 +389,10 @@
                             <tbody></tbody>
                         </table>
                     </div>
-
-                    <div style="display: flex; justify-content: flex-end; padding: 20px; border-top: 1px solid #eee; background: #fafafa;">
-                        <div style="text-align: right;">
-                            <div style="font-size: 12px; font-weight: 600; color: #888; text-transform: uppercase; margin-bottom: 4px;">Remaining Balance</div>
-                            <div id="patient-balance-display" style="font-size: 22px; font-weight: 700; color: #2ecc71;">
-                                Rs. 0.00
-                            </div>
+                    <div style="display:flex;justify-content:flex-end;padding:20px;border-top:1px solid #eee;background:#fafafa;">
+                        <div style="text-align:right;">
+                            <div style="font-size:12px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px;">Remaining Balance</div>
+                            <div id="patient-balance-display" style="font-size:22px;font-weight:700;color:#2ecc71;">Rs. 0.00</div>
                         </div>
                     </div>
                 </div>
@@ -406,14 +405,10 @@
                     <select id="v-patsel" onchange="loadVitals()"><option value="">— Select Patient —</option></select>
                     <button id="btn-new-vital" class="btn btn-gold btn-sm" onclick="openVitalsForm()">+ New Vital</button>
                 </div>
-
                 <div class="exp-section" id="vitals-form">
                     <div style="font-size:13px;font-weight:600;margin-bottom:14px">Record New Vitals</div>
                     <div class="form-grid">
-                        <div class="field">
-                            <label class="lbl">Patient</label>
-                            <select id="vf-patsel"><option value="">— Select Patient —</option></select>
-                        </div>
+                        <div class="field"><label class="lbl">Patient</label><select id="vf-patsel"><option value="">— Select Patient —</option></select></div>
                         <div class="field">
                             <label class="lbl">Category</label>
                             <select id="vf-cat">
@@ -434,14 +429,11 @@
                         <button class="btn btn-ghost btn-sm" onclick="toggleSec('vitals-form')">Cancel</button>
                     </div>
                 </div>
-
-                <!-- Multiline Vitals Trend Chart -->
                 <div class="vitals-chart-card">
                     <div class="card-hd" style="margin-bottom:4px">
                         <div class="card-ttl">Vitals Trend</div>
                         <span style="font-size:11px;color:var(--muted)">Last 10 readings · hover for details</span>
                     </div>
-                    <!-- Inline legend -->
                     <div class="vitals-legend" id="vitals-legend" style="display:none">
                         <span><i style="background:#e980fc"></i>Pulse (bpm)</span>
                         <span><i style="background:#231942"></i>BP Systolic</span>
@@ -455,12 +447,8 @@
                     </div>
                     <canvas id="vitalsChart" height="100" style="display:none;margin-top:12px"></canvas>
                 </div>
-
-                <!-- History Table -->
                 <div class="card">
-                    <div class="card-hd">
-                        <div class="card-ttl">Vitals History</div>
-                    </div>
+                    <div class="card-hd"><div class="card-ttl">Vitals History</div></div>
                     <div class="tbl-wrap">
                         <table id="vitals-tbl">
                             <thead><tr><th>Category</th><th>Recorded</th><th>Pulse / BP</th><th>O₂ Sat</th><th>Blood Glucose</th><th></th></tr></thead>
@@ -477,7 +465,6 @@
                     <select id="sym-patsel" onchange="loadSymptoms()"><option value="">— Select Patient —</option></select>
                     <button class="btn btn-gold btn-sm" onclick="toggleSymptomForm()">+ Add Symptom</button>
                 </div>
-
                 <div class="exp-section" id="sym-form">
                     <div class="sym-tabs">
                         <button class="sym-tab active" id="sym-tab-predefined" onclick="showSymptomTab('predefined')">From Master List</button>
@@ -513,7 +500,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="symptoms-layout">
                     <div class="sym-chart-card">
                         <div class="card-hd" style="margin-bottom:8px">
@@ -528,10 +514,7 @@
                     </div>
                     <div>
                         <div id="sym-list">
-                            <div class="empty">
-                                <div class="empty-icon">🩺</div>
-                                <p>Select a patient to view their symptoms.</p>
-                            </div>
+                            <div class="empty"><div class="empty-icon">🩺</div><p>Select a patient to view their symptoms.</p></div>
                         </div>
                     </div>
                 </div>
@@ -553,11 +536,7 @@
                             <div class="field"><label class="lbl">Heart Rate (bpm)</label><input id="s-hr" type="number" placeholder="72" /></div>
                             <div class="field">
                                 <label class="lbl">BMI Category</label>
-                                <select id="s-bmi">
-                                    <option>Normal</option>
-                                    <option>Overweight</option>
-                                    <option>Obese</option>
-                                </select>
+                                <select id="s-bmi"><option>Normal</option><option>Overweight</option><option>Obese</option></select>
                             </div>
                         </div>
                         <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="doStress()">Predict Stress Level</button>
@@ -569,15 +548,10 @@
                     <div class="predictor-chart-card">
                         <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--navy);margin-bottom:6px">Stress Analysis</div>
                         <p style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--muted);margin-bottom:18px">Visual breakdown updates after each prediction</p>
-                        <div id="stress-chart-placeholder" class="chart-placeholder">
-                            <span style="font-size:32px">🧠</span>
-                            <span>Run a prediction to see your analysis</span>
-                        </div>
+                        <div id="stress-chart-placeholder" class="chart-placeholder"><span style="font-size:32px">🧠</span><span>Run a prediction to see your analysis</span></div>
                         <div id="stress-charts-wrap" style="display:none">
                             <canvas id="stressRadar" height="220"></canvas>
-                            <div style="margin-top:20px">
-                                <canvas id="stressBar" height="120"></canvas>
-                            </div>
+                            <div style="margin-top:20px"><canvas id="stressBar" height="120"></canvas></div>
                         </div>
                     </div>
                 </div>
@@ -591,9 +565,7 @@
                         <p style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--muted);margin-bottom:20px">Select a patient to auto-fill, or enter details manually.</p>
                         <div style="margin-bottom:16px">
                             <label class="lbl">Select Patient (optional)</label>
-                            <select id="c-patsel" onchange="handleCostModeChange()" style="max-width:300px">
-                                <option value="">— Manual Entry —</option>
-                            </select>
+                            <select id="c-patsel" onchange="handleCostModeChange()" style="max-width:300px"><option value="">— Manual Entry —</option></select>
                         </div>
                         <div class="form-grid">
                             <div class="field"><label class="lbl">Age</label><input id="c-age" type="number" placeholder="35" /></div>
@@ -612,26 +584,19 @@
                     <div class="predictor-chart-card">
                         <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--navy);margin-bottom:6px">Cost Breakdown</div>
                         <p style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--muted);margin-bottom:18px">Visual breakdown updates after each prediction</p>
-                        <div id="cost-chart-placeholder" class="chart-placeholder">
-                            <span style="font-size:32px">📊</span>
-                            <span>Run a prediction to see cost analysis</span>
-                        </div>
+                        <div id="cost-chart-placeholder" class="chart-placeholder"><span style="font-size:32px">📊</span><span>Run a prediction to see cost analysis</span></div>
                         <div id="cost-charts-wrap" style="display:none">
                             <canvas id="costDonut" height="200"></canvas>
-                            <div style="margin-top:20px">
-                                <canvas id="costBar" height="120"></canvas>
-                            </div>
+                            <div style="margin-top:20px"><canvas id="costBar" height="120"></canvas></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-        </div><!-- /content -->
-    </div><!-- /main -->
-
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <script src="/static/js/caretaker.js"></script>
     <script src="/static/js/notifications.js"></script>
     <script src="/static/js/dashboard.js"></script>
@@ -643,413 +608,266 @@
     <script src="/static/js/symptoms.js"></script>
     <script src="/static/js/predictions.js"></script>
 
-    <!-- ══════════════════════════════════════════════════════════════════════
-         CHART SETUP  — runs AFTER all external JS (inline is last in body)
-         Palette: #231942 · #b96ac9 · #e980fc · #ffd2fc · #ddfff7 / #a8f0e0
-    ══════════════════════════════════════════════════════════════════════ -->
     <script>
-        /* ─── Shared palette tokens ─────────────────────────────────────────── */
         const C = {
-            deep: '#231942',
-            navy2: '#3d1f5e',
-            navy3: '#5e2a7a',
-            mid: '#b96ac9',
-            bright: '#e980fc',
-            pink: '#ffd2fc',
-            mint: '#ddfff7',
-            mintDk: '#a8f0e0',
-            muted: '#5a4d5e',
-            /* alpha variants */
-            deepA: 'rgba(35,25,66,0.10)',
-            midA: 'rgba(185,106,201,0.14)',
-            brightA: 'rgba(233,128,252,0.14)',
-            pinkA: 'rgba(255,210,252,0.20)',
+            deep: '#231942', navy2: '#3d1f5e', navy3: '#5e2a7a',
+            mid: '#b96ac9', bright: '#e980fc', pink: '#ffd2fc',
+            mint: '#ddfff7', mintDk: '#a8f0e0', muted: '#5a4d5e',
+            deepA: 'rgba(35,25,66,0.10)', midA: 'rgba(185,106,201,0.14)',
+            brightA: 'rgba(233,128,252,0.14)', pinkA: 'rgba(255,210,252,0.20)',
             mintA: 'rgba(168,240,224,0.18)',
         };
 
-        /* Shared tooltip defaults */
-        const TT = {
-            backgroundColor: C.deep,
-            titleFont: { family: 'Playfair Display', size: 13 },
-            bodyFont: { family: 'Outfit', size: 12 },
-            padding: 12, cornerRadius: 10
-        };
+        const TT = { backgroundColor: C.deep, titleFont: { family: 'Playfair Display', size: 13 }, bodyFont: { family: 'Outfit', size: 12 }, padding: 12, cornerRadius: 10 };
 
-        /* ═══════════════════════════════════════════════════════════════════════
-           VITALS MULTILINE CHART CONFIG
-           Exposed as window.buildVitalsMultilineChart(canvasId, labels, datasets)
-           so vitals.js / dashboard.js can call it to render the chart.
-
-           Expected `datasets` object shape:
-           {
-             pulse:    number[],   // bpm
-             bp:       number[],   // systolic mmHg
-             spo2:     number[],   // %
-             glucose:  number[],   // mg/dL
-             resp:     number[],   // breaths/min
-           }
-        ═══════════════════════════════════════════════════════════════════════ */
         function makeVitalsDatasets(d) {
             const def = { pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5, tension: 0.4, fill: false };
             return [
-                {
-                    label: 'Pulse (bpm)',
-                    data: d?.pulse || [],
-                    borderColor: C.bright,
-                    backgroundColor: C.brightA,
-                    pointBackgroundColor: C.bright,
-                    borderWidth: 2.5,
-                    yAxisID: 'yMain',
-                    ...def
-                },
-                {
-                    label: 'BP Systolic (mmHg)',
-                    data: d?.bp || [],
-                    borderColor: C.deep,
-                    backgroundColor: C.deepA,
-                    pointBackgroundColor: C.deep,
-                    borderWidth: 2.5,
-                    yAxisID: 'yMain',
-                    ...def
-                },
-                {
-                    label: 'SpO₂ (%)',
-                    data: d?.spo2 || [],
-                    borderColor: C.mintDk,
-                    backgroundColor: C.mintA,
-                    pointBackgroundColor: C.mintDk,
-                    borderWidth: 2.5,
-                    yAxisID: 'ySec',
-                    ...def
-                },
-                {
-                    label: 'Blood Glucose (mg/dL)',
-                    data: d?.glucose || [],
-                    borderColor: C.mid,
-                    backgroundColor: C.midA,
-                    pointBackgroundColor: C.mid,
-                    borderWidth: 2.5,
-                    yAxisID: 'yMain',
-                    ...def
-                },
-                {
-                    label: 'Resp. Rate (/min)',
-                    data: d?.resp || [],
-                    borderColor: C.pink,
-                    backgroundColor: C.pinkA,
-                    pointBackgroundColor: C.pink,
-                    pointBorderColor: C.navy3,
-                    borderWidth: 2,
-                    borderDash: [5, 4],
-                    yAxisID: 'ySec',
-                    ...def
-                }
+                { label: 'Pulse (bpm)', data: d?.pulse || [], borderColor: C.bright, backgroundColor: C.brightA, pointBackgroundColor: C.bright, borderWidth: 2.5, yAxisID: 'yMain', ...def },
+                { label: 'BP Systolic (mmHg)', data: d?.bp || [], borderColor: C.deep, backgroundColor: C.deepA, pointBackgroundColor: C.deep, borderWidth: 2.5, yAxisID: 'yMain', ...def },
+                { label: 'SpO₂ (%)', data: d?.spo2 || [], borderColor: C.mintDk, backgroundColor: C.mintA, pointBackgroundColor: C.mintDk, borderWidth: 2.5, yAxisID: 'ySec', ...def },
+                { label: 'Blood Glucose (mg/dL)', data: d?.glucose || [], borderColor: C.mid, backgroundColor: C.midA, pointBackgroundColor: C.mid, borderWidth: 2.5, yAxisID: 'yMain', ...def },
+                { label: 'Resp. Rate (/min)', data: d?.resp || [], borderColor: C.pink, backgroundColor: C.pinkA, pointBackgroundColor: C.pink, pointBorderColor: C.navy3, borderWidth: 2, borderDash: [5, 4], yAxisID: 'ySec', ...def }
             ];
         }
 
-        function vitalsChartOptions(withDualAxis) {
+        function vitalsChartOptions() {
             return {
-                responsive: true,
-                interaction: { mode: 'index', intersect: false },
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            font: { family: 'Outfit', size: 12 },
-                            color: C.muted,
-                            usePointStyle: true,
-                            pointStyleWidth: 10,
-                            padding: 14
-                        }
-                    },
-                    tooltip: { ...TT }
-                },
+                responsive: true, interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'top', labels: { font: { family: 'Outfit', size: 12 }, color: C.muted, usePointStyle: true, pointStyleWidth: 10, padding: 14 } }, tooltip: { ...TT } },
                 scales: {
-                    x: {
-                        grid: { display: false },
-                        border: { display: false },
-                        ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted }
-                    },
-                    yMain: {
-                        type: 'linear',
-                        position: 'left',
-                        grid: { color: 'rgba(35,25,66,0.05)' },
-                        border: { display: false },
-                        ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted }
-                    },
-                    ySec: {
-                        type: 'linear',
-                        position: 'right',
-                        grid: { drawOnChartArea: false },
-                        border: { display: false },
-                        ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted }
-                    }
+                    x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } },
+                    yMain: { type: 'linear', position: 'left', grid: { color: 'rgba(35,25,66,0.05)' }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } },
+                    ySec: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } }
                 }
             };
         }
 
-        /**
-         * Build (or rebuild) a multiline vitals chart on the given canvas.
-         * Called by vitals.js / dashboard.js when patient data is ready.
-         *
-         * @param {string} canvasId   — 'vitalsChart' or 'dashVitalsChart'
-         * @param {string[]} labels   — date/time strings for x-axis
-         * @param {object}  data      — { pulse, bp, spo2, glucose, resp } arrays
-         * @returns {Chart}
-         */
         window.buildVitalsMultilineChart = function (canvasId, labels, data) {
             const canvas = document.getElementById(canvasId);
             if (!canvas) return null;
             const existing = Chart.getChart(canvas);
             if (existing) existing.destroy();
             canvas.style.display = 'block';
-
-            // Show legend strip (vitals panel only)
             const leg = document.getElementById('vitals-legend');
             if (leg) leg.style.display = 'flex';
-
-            return new Chart(canvas, {
-                type: 'line',
-                data: { labels: labels || [], datasets: makeVitalsDatasets(data) },
-                options: vitalsChartOptions(true)
-            });
+            return new Chart(canvas, { type: 'line', data: { labels: labels || [], datasets: makeVitalsDatasets(data) }, options: vitalsChartOptions() });
         };
 
-        /* ─── Dashboard Vitals — multiline fallback ──────────────────────────
-           dashboard.js should call:
-             window.buildVitalsMultilineChart('dashVitalsChart', labels, data)
-           and set display:block on the canvas itself.
-           The block below ensures the chart is ready in multiline config even
-           if dashboard.js creates it first with a different type.             */
         document.addEventListener('DOMContentLoaded', function () {
 
-            /* 1 ── Vitals chart — rebuild as multiline after external JS runs */
             requestAnimationFrame(() => {
-
-                const ids = ['vitalsChart', 'dashVitalsChart'];
-
-                ids.forEach((id) => {
-                    const canvas = document.getElementById(id);
-                    if (!canvas) return;
-
-                    const existing = Chart.getChart(canvas);
-                    if (!existing) return;
-
-                    const lbl = existing.data.labels || [];
-                    existing.destroy();
-
-                    new Chart(canvas, {
-                        type: 'line',
-                        data: {
-                            labels: lbl,
-                            datasets: makeVitalsDatasets(null)
-                        },
-                        options: {
-                            ...vitalsChartOptions(true),
-                            responsive: true,
-                            maintainAspectRatio: false
-                        }
-                    });
+                ['vitalsChart', 'dashVitalsChart'].forEach(id => {
+                    const canvas = document.getElementById(id); if (!canvas) return;
+                    const existing = Chart.getChart(canvas); if (!existing) return;
+                    const lbl = existing.data.labels || []; existing.destroy();
+                    new Chart(canvas, { type: 'line', data: { labels: lbl, datasets: makeVitalsDatasets(null) }, options: { ...vitalsChartOptions(), responsive: true, maintainAspectRatio: false } });
                 });
-
             });
 
-            /* 2 ── Symptoms chart — multicolored horizontal bars ───────────── */
             setTimeout(function () {
-                const canvas = document.getElementById('symptomsChart');
-                if (!canvas) return;
-                const existing = Chart.getChart(canvas);
-                if (!existing) return;
-                /* Patch the dataset colors to be multicolored */
-                if (existing.data && existing.data.datasets && existing.data.datasets[0]) {
+                const canvas = document.getElementById('symptomsChart'); if (!canvas) return;
+                const existing = Chart.getChart(canvas); if (!existing) return;
+                if (existing.data?.datasets?.[0]) {
                     const n = (existing.data.labels || []).length || 6;
                     const palette = [C.deep, C.navy3, C.mid, C.bright, C.mintDk, C.pink];
-                    existing.data.datasets[0].backgroundColor =
-                        Array.from({ length: n }, (_, i) => palette[i % palette.length]);
+                    existing.data.datasets[0].backgroundColor = Array.from({ length: n }, (_, i) => palette[i % palette.length]);
                     existing.data.datasets[0].borderRadius = 8;
                     existing.update();
                 }
             }, 300);
 
-            /* 3 ── Hook predictor functions ────────────────────────────────── */
             const _origDoStress = window.doStress;
             window.doStress = async function () {
                 if (_origDoStress) await _origDoStress();
-                setTimeout(function () {
-                    const num = parseFloat(document.getElementById('stress-val').textContent);
-                    updateStressCharts(isNaN(num) ? 5 : num);
-                }, 400);
+                setTimeout(function () { const num = parseFloat(document.getElementById('stress-val').textContent); updateStressCharts(isNaN(num) ? 5 : num); }, 400);
             };
 
             const _origDoCost = window.doCost;
             window.doCost = async function () {
                 if (_origDoCost) await _origDoCost();
-                setTimeout(function () {
-                    const num = parseFloat(document.getElementById('cost-val').textContent.replace(/[^0-9.]/g, ''));
-                    updateCostCharts(isNaN(num) ? 11000 : num);
-                }, 400);
+                setTimeout(function () { const num = parseFloat(document.getElementById('cost-val').textContent.replace(/[^0-9.]/g, '')); updateCostCharts(isNaN(num) ? 11000 : num); }, 400);
             };
+
+            (function initDashboardRowSelection() {
+                let selectedPatientId = null;
+                function attachRowHandlers() {
+                    const tbody = document.querySelector('#dash-tbl tbody'); if (!tbody) return;
+                    Array.from(tbody.rows).forEach(row => {
+                        row.style.cursor = 'pointer'; row.style.transition = 'background 0.15s';
+                        row.onclick = function () {
+                            Array.from(tbody.rows).forEach(r => r.classList.remove('row-selected'));
+                            row.classList.add('row-selected');
+                            const pid = row.cells[0]?.textContent?.trim();
+                            const pname = row.cells[1]?.textContent?.trim();
+                            if (!pid) return;
+                            selectedPatientId = pid;
+                            const label = document.getElementById('insight-patient-label');
+                            if (label) label.textContent = pname || pid;
+                            window.loadInsightCharts([{ patientid: pid }], null);
+                        };
+                    });
+                }
+                let tries = 0;
+                const interval = setInterval(() => {
+                    tries++;
+                    const rows = document.querySelectorAll('#dash-tbl tbody tr');
+                    if (rows.length > 0) { clearInterval(interval); attachRowHandlers(); rows[0].click(); }
+                    if (tries > 40) clearInterval(interval);
+                }, 150);
+                const observer = new MutationObserver(() => {
+                    attachRowHandlers();
+                    if (!selectedPatientId) { const first = document.querySelector('#dash-tbl tbody tr'); if (first) first.click(); }
+                });
+                const tbody = document.getElementById('dash-tbl');
+                if (tbody) observer.observe(tbody, { childList: true, subtree: true });
+            })();
         });
 
-        /* ═══════════════════════════════════════════════════════════════════════
-           STRESS CHARTS  — Radar + multicolored bar
-        ═══════════════════════════════════════════════════════════════════════ */
+        /* ═══ INSIGHT CHARTS ═══ */
+        let taskPriorityChart = null, apptCatChart = null, expCatChart = null;
+
+        const APPT_CATS = ['Consultation', 'Follow-up', 'Medical Test', 'Therapy', 'Emergency'];
+        const APPT_COLS = [C.deep, C.mid, C.bright, C.mintDk, '#ff8fab'];
+        const EXP_CATS = ['Medication', 'Laboratory Tests', 'Procedures & Surgery', 'Hospitalization', 'Emergency'];
+        const EXP_COLS = [C.deep, C.navy3, C.mid, C.bright, C.mintDk];
+
+        window.loadInsightCharts = async function (patients, cid) {
+            if (!patients || !patients.length) return;
+
+            const taskPri = { High: 0, Medium: 0, Low: 0 };
+            const apptCat = Object.fromEntries(APPT_CATS.map(k => [k, 0]));
+            const apptDates = Object.fromEntries(APPT_CATS.map(k => [k, []]));
+            const expCat = Object.fromEntries(EXP_CATS.map(k => [k, 0]));
+
+            await Promise.all(patients.map(async p => {
+                const pid = p.patientid || p.patient_id || p.PatientID;
+                if (!pid) return;
+                try {
+                    const tRes = await fetch(`/api/tasks/${pid}`);
+                    if (tRes.ok) { const tasks = await tRes.json(); tasks.forEach(t => { const pri = (t.task_priority || '').trim(); if (pri in taskPri) taskPri[pri]++; }); }
+                } catch (_) { }
+                try {
+                    const aRes = await fetch(`/api/appointments/${pid}`);
+                    if (aRes.ok) {
+                        const appts = await aRes.json();
+                        appts.forEach(a => {
+                            const cat = (a.appointment_category || '').trim();
+                            if (cat in apptCat) {
+                                apptCat[cat]++;
+                                if (a.appointment_datetime) apptDates[cat].push(a.appointment_datetime);
+                            }
+                        });
+                    }
+                } catch (_) { }
+                try {
+                    const eRes = await fetch(`/api/expenses/${pid}`);
+                    if (eRes.ok) { const data = await eRes.json(); const exps = data.expenses || data || []; exps.forEach(e => { const cat = (e.expense_category || '').trim(); if (cat in expCat) expCat[cat]++; }); }
+                } catch (_) { }
+            }));
+
+            /* Task Priority Donut */
+            const total = taskPri.High + taskPri.Medium + taskPri.Low;
+            document.getElementById('taskTotalCount').textContent = total;
+            if (taskPriorityChart) taskPriorityChart.destroy();
+            taskPriorityChart = new Chart(document.getElementById('taskPriorityDonut'), {
+                type: 'doughnut',
+                data: { labels: ['High', 'Medium', 'Low'], datasets: [{ data: [taskPri.High, taskPri.Medium, taskPri.Low], backgroundColor: [C.deep, C.mid, C.mintDk], borderWidth: 4, borderColor: '#fff', hoverOffset: 10 }] },
+                options: { cutout: '70%', plugins: { legend: { display: false }, tooltip: { ...TT, callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} tasks` } } }, animation: { animateRotate: true, duration: 900 } }
+            });
+
+            /* Appointments — horizontal bar with dates on hover */
+            if (apptCatChart) apptCatChart.destroy();
+            apptCatChart = new Chart(document.getElementById('apptCategoryChart'), {
+                type: 'bar',
+                data: {
+                    labels: APPT_CATS.map(c => c.length > 14 ? c.slice(0, 13) + '…' : c),
+                    datasets: [{ data: APPT_CATS.map(c => apptCat[c]), backgroundColor: APPT_COLS, borderRadius: 7, borderSkipped: false, barPercentage: 0.65 }]
+                },
+                options: {
+                    indexAxis: 'y', responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            ...TT,
+                            callbacks: {
+                                label: ctx => ` ${ctx.raw} appointment${ctx.raw !== 1 ? 's' : ''}`,
+                                afterLabel: ctx => {
+                                    const dates = apptDates[APPT_CATS[ctx.dataIndex]] || [];
+                                    if (!dates.length) return '';
+                                    return dates.slice(0, 5).map(d => '  📅 ' + d).join('\n');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 10 }, color: C.muted, stepSize: 1, precision: 0, callback: v => Number.isInteger(v) ? v : '' } },
+                        y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 10 }, color: C.muted } }
+                    }
+                }
+            });
+
+            /* Expenses by Category */
+            if (expCatChart) expCatChart.destroy();
+            expCatChart = new Chart(document.getElementById('expCategoryChart'), {
+                type: 'bar',
+                data: {
+                    labels: EXP_CATS.map(c => c.length > 12 ? c.slice(0, 11) + '…' : c),
+                    datasets: [{ data: EXP_CATS.map(c => expCat[c]), backgroundColor: EXP_COLS, borderRadius: 7, borderSkipped: false, barPercentage: 0.65 }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false }, tooltip: { ...TT, callbacks: { label: ctx => ` ${ctx.raw} expense${ctx.raw !== 1 ? 's' : ''}` } } },
+                    scales: {
+                        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 9 }, color: C.muted } },
+                        y: { grid: { color: 'rgba(35,25,66,0.05)' }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 10 }, color: C.muted, stepSize: 1, precision: 0 } }
+                    }
+                }
+            });
+        };
+
+        /* ═══ STRESS CHARTS ═══ */
         let stressRadarChart = null, stressBarChart = null;
 
         function updateStressCharts(level) {
-            const sleep = parseFloat(document.getElementById('s-sleep').value) || 7;
-            const quality = parseFloat(document.getElementById('s-qual').value) || 7;
-            const act = parseFloat(document.getElementById('s-act').value) || 50;
-            const hr = parseFloat(document.getElementById('s-hr').value) || 72;
+            const sleep = parseFloat(document.getElementById('s-sleep').value) || 7, quality = parseFloat(document.getElementById('s-qual').value) || 7;
+            const act = parseFloat(document.getElementById('s-act').value) || 50, hr = parseFloat(document.getElementById('s-hr').value) || 72;
             const steps = parseFloat(document.getElementById('s-steps').value) || 8000;
-
             document.getElementById('stress-chart-placeholder').style.display = 'none';
             document.getElementById('stress-charts-wrap').style.display = 'block';
-
-            /* Radar */
             if (stressRadarChart) stressRadarChart.destroy();
             stressRadarChart = new Chart(document.getElementById('stressRadar'), {
                 type: 'radar',
-                data: {
-                    labels: ['Sleep', 'Quality', 'Activity', 'Heart Rate', 'Steps'],
-                    datasets: [{
-                        label: 'Patient Metrics',
-                        data: [
-                            (sleep / 12) * 100,
-                            quality * 10,
-                            act,
-                            Math.max(0, 100 - (hr - 60)),
-                            Math.min(100, steps / 100)
-                        ],
-                        backgroundColor: C.brightA,
-                        borderColor: C.bright,
-                        pointBackgroundColor: [C.deep, C.mid, C.bright, C.mintDk, C.pink],
-                        pointBorderColor: '#fff',
-                        pointBorderWidth: 2,
-                        pointRadius: 6,
-                        borderWidth: 2.5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        r: {
-                            min: 0, max: 100,
-                            ticks: { display: false },
-                            grid: { color: 'rgba(35,25,66,0.08)' },
-                            pointLabels: { font: { family: 'Outfit', size: 12 }, color: C.muted }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { ...TT }
-                    }
-                }
+                data: { labels: ['Sleep', 'Quality', 'Activity', 'Heart Rate', 'Steps'], datasets: [{ label: 'Patient Metrics', data: [(sleep / 12) * 100, quality * 10, act, Math.max(0, 100 - (hr - 60)), Math.min(100, steps / 100)], backgroundColor: C.brightA, borderColor: C.bright, pointBackgroundColor: [C.deep, C.mid, C.bright, C.mintDk, C.pink], pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 6, borderWidth: 2.5 }] },
+                options: { responsive: true, scales: { r: { min: 0, max: 100, ticks: { display: false }, grid: { color: 'rgba(35,25,66,0.08)' }, pointLabels: { font: { family: 'Outfit', size: 12 }, color: C.muted } } }, plugins: { legend: { display: false }, tooltip: { ...TT } } }
             });
-
-            /* Stress level bar — each segment a distinct palette color */
             const lvl = typeof level === 'number' ? level : 5;
-            const lowV = lvl <= 3 ? lvl : 3;
-            const midV = lvl > 3 && lvl <= 6 ? lvl - 3 : (lvl > 6 ? 3 : 0);
-            const highV = lvl > 6 ? lvl - 6 : 0;
-
             if (stressBarChart) stressBarChart.destroy();
             stressBarChart = new Chart(document.getElementById('stressBar'), {
                 type: 'bar',
-                data: {
-                    labels: ['Low (1–3)', 'Moderate (4–6)', 'High (7–10)'],
-                    datasets: [{
-                        data: [lowV, midV, highV],
-                        backgroundColor: [C.mintDk, C.mid, C.navy3],
-                        borderRadius: 8,
-                        borderSkipped: false,
-                        barPercentage: 0.6
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { ...TT }
-                    },
-                    scales: {
-                        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } },
-                        y: { display: false }
-                    }
-                }
+                data: { labels: ['Low (1–3)', 'Moderate (4–6)', 'High (7–10)'], datasets: [{ data: [lvl <= 3 ? lvl : 3, lvl > 3 && lvl <= 6 ? lvl - 3 : (lvl > 6 ? 3 : 0), lvl > 6 ? lvl - 6 : 0], backgroundColor: [C.mintDk, C.mid, C.navy3], borderRadius: 8, borderSkipped: false, barPercentage: 0.6 }] },
+                options: { responsive: true, plugins: { legend: { display: false }, tooltip: { ...TT } }, scales: { x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } }, y: { display: false } } }
             });
         }
 
-        /* ═══════════════════════════════════════════════════════════════════════
-           COST CHARTS  — Donut + multicolored regional bar
-        ═══════════════════════════════════════════════════════════════════════ */
+        /* ═══ COST CHARTS ═══ */
         let costDonutChart = null, costBarChart = null;
 
         function updateCostCharts(predicted) {
             document.getElementById('cost-chart-placeholder').style.display = 'none';
             document.getElementById('cost-charts-wrap').style.display = 'block';
-
-            const base = Math.round(predicted * 0.45);
-            const smoker = Math.round(predicted * 0.25);
-            const bmi = Math.round(predicted * 0.18);
-            const age = Math.round(predicted * 0.12);
-
+            const base = Math.round(predicted * 0.45), smoker = Math.round(predicted * 0.25), bmi = Math.round(predicted * 0.18), age = Math.round(predicted * 0.12);
             if (costDonutChart) costDonutChart.destroy();
             costDonutChart = new Chart(document.getElementById('costDonut'), {
                 type: 'doughnut',
-                data: {
-                    labels: ['Base Cost', 'Smoking Risk', 'BMI Factor', 'Age Factor'],
-                    datasets: [{
-                        data: [base, smoker, bmi, age],
-                        backgroundColor: [C.deep, C.navy3, C.mid, C.mintDk],
-                        borderWidth: 4,
-                        borderColor: '#fff',
-                        hoverOffset: 12
-                    }]
-                },
-                options: {
-                    cutout: '65%',
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { font: { family: 'Outfit', size: 11 }, color: C.muted, usePointStyle: true, pointStyleWidth: 8, padding: 16 }
-                        },
-                        tooltip: {
-                            ...TT,
-                            callbacks: { label: ctx => ' Rs. ' + ctx.raw.toLocaleString() }
-                        }
-                    }
-                }
+                data: { labels: ['Base Cost', 'Smoking Risk', 'BMI Factor', 'Age Factor'], datasets: [{ data: [base, smoker, bmi, age], backgroundColor: [C.deep, C.navy3, C.mid, C.mintDk], borderWidth: 4, borderColor: '#fff', hoverOffset: 12 }] },
+                options: { cutout: '65%', plugins: { legend: { position: 'bottom', labels: { font: { family: 'Outfit', size: 11 }, color: C.muted, usePointStyle: true, pointStyleWidth: 8, padding: 16 } }, tooltip: { ...TT, callbacks: { label: ctx => ' Rs. ' + ctx.raw.toLocaleString() } } } }
             });
-
-            /* Regional comparison — each region its own palette color */
             if (costBarChart) costBarChart.destroy();
             costBarChart = new Chart(document.getElementById('costBar'), {
                 type: 'bar',
-                data: {
-                    labels: ['Northeast', 'Northwest', 'Southeast', 'Southwest', 'Your Patient'],
-                    datasets: [{
-                        data: [12000, 10500, 11200, 9800, Math.round(predicted)],
-                        backgroundColor: [C.pink, C.mintDk, C.mid, C.bright, C.deep],
-                        borderRadius: 8,
-                        borderSkipped: false,
-                        barPercentage: 0.65
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            ...TT,
-                            callbacks: { label: ctx => ' Rs. ' + ctx.raw.toLocaleString() }
-                        }
-                    },
-                    scales: {
-                        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } },
-                        y: { grid: { color: 'rgba(35,25,66,0.05)' }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } }
-                    }
-                }
+                data: { labels: ['Northeast', 'Northwest', 'Southeast', 'Southwest', 'Your Patient'], datasets: [{ data: [12000, 10500, 11200, 9800, Math.round(predicted)], backgroundColor: [C.pink, C.mintDk, C.mid, C.bright, C.deep], borderRadius: 8, borderSkipped: false, barPercentage: 0.65 }] },
+                options: { responsive: true, plugins: { legend: { display: false }, tooltip: { ...TT, callbacks: { label: ctx => ' Rs. ' + ctx.raw.toLocaleString() } } }, scales: { x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } }, y: { grid: { color: 'rgba(35,25,66,0.05)' }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } } } }
             });
         }
     </script>

@@ -1,4 +1,4 @@
-﻿import random
+import random
 import string
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db, row_to_dict
@@ -7,7 +7,7 @@ from models import CaretakerCreate, CaretakerUpdate
 router = APIRouter()
 
 
-# ── ID + password generators ──────────────────────────────────────────────────
+# -- ID + password generators --------------------------------------------------
 def gen_id(db):
     cur = db.cursor()
     try:
@@ -23,7 +23,7 @@ def gen_pw(n=8):
     return ''.join(random.choices(string.ascii_letters + string.digits, k=n))
 
 
-# ── Signup (create caretaker) ─────────────────────────────────────────────────
+# -- Signup (create caretaker) -------------------------------------------------
 @router.post("/api/caretaker")
 def create_caretaker(c: CaretakerCreate, db=Depends(get_db)):
     if c.contact and not c.contact.isdigit():
@@ -58,7 +58,7 @@ def create_caretaker(c: CaretakerCreate, db=Depends(get_db)):
         cur.close()
 
 
-# ── Get caretaker profile ─────────────────────────────────────────────────────
+# -- Get caretaker profile -----------------------------------------------------
 @router.get("/api/caretaker/{cid}")
 def get_caretaker(cid: str, db=Depends(get_db)):
     cur = db.cursor()
@@ -78,7 +78,7 @@ def get_caretaker(cid: str, db=Depends(get_db)):
         cur.close()
 
 
-# ── Update caretaker profile ──────────────────────────────────────────────────
+# -- Update caretaker profile --------------------------------------------------
 @router.put("/api/caretaker/{cid}")
 def update_caretaker(cid: str, c: CaretakerUpdate, db=Depends(get_db)):
     if c.contact and not c.contact.isdigit():
@@ -111,7 +111,7 @@ def update_caretaker(cid: str, c: CaretakerUpdate, db=Depends(get_db)):
         cur.close()
 
 
-# ── Delete caretaker ──────────────────────────────────────────────────────────
+# -- Delete caretaker ----------------------------------------------------------
 @router.delete("/api/caretaker/{cid}")
 def delete_caretaker(cid: str, db=Depends(get_db)):
     cur = db.cursor()

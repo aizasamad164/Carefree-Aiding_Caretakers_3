@@ -1,10 +1,10 @@
-﻿from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
 from models import DietaryPlanCreate, DietaryPlanUpdate
 
 router = APIRouter()
 
-# ── Create tables if not exist ────────────────────────────────────────────────
+# -- Create tables if not exist ------------------------------------------------
 #def create_dietary_plan_tables(db):
 #    cur = db.cursor()
 
@@ -54,7 +54,7 @@ router = APIRouter()
 #    cur.close()
 
 
-# ── Get all dietary plans for a patient ───────────────────────────────────────
+# -- Get all dietary plans for a patient ---------------------------------------
 @router.get("/api/dietary-plans/{pid}")
 def get_plans(pid: str, db=Depends(get_db)):
     cur = db.cursor()
@@ -82,7 +82,7 @@ def get_plans(pid: str, db=Depends(get_db)):
     return result
 
 
-# ── Get single dietary plan ───────────────────────────────────────────────────
+# -- Get single dietary plan ---------------------------------------------------
 @router.get("/api/dietary-plan/{plan_id}")
 def get_plan(plan_id: str, db=Depends(get_db)):
     cur = db.cursor()
@@ -103,7 +103,7 @@ def get_plan(plan_id: str, db=Depends(get_db)):
     return plan
 
 
-# ── Create dietary plan ───────────────────────────────────────────────────────
+# -- Create dietary plan -------------------------------------------------------
 @router.post("/api/dietary-plan")
 def create_plan(p: DietaryPlanCreate, db=Depends(get_db)):
     cur = db.cursor()
@@ -115,12 +115,12 @@ def create_plan(p: DietaryPlanCreate, db=Depends(get_db)):
         VALUES (:1,:2,:3)
     """, (plan_id, p.duration, p.patient_id))
 
-    # Insert goals — one row per goal (1NF)
+    # Insert goals � one row per goal (1NF)
     for goal in p.goals:
         cur.execute("INSERT INTO DietaryGoal (PlanID, Goal) VALUES (:1,:2)",
                     (plan_id, goal.strip()))
 
-    # Insert restrictions — one row per restriction (1NF)
+    # Insert restrictions � one row per restriction (1NF)
     for restriction in p.restrictions:
         cur.execute("INSERT INTO DietaryRestriction (PlanID, Restriction) VALUES (:1,:2)",
                     (plan_id, restriction.strip()))
@@ -129,7 +129,7 @@ def create_plan(p: DietaryPlanCreate, db=Depends(get_db)):
     return {"message": "Dietary plan created", "plan_id": plan_id}
 
 
-# ── Update dietary plan ───────────────────────────────────────────────────────
+# -- Update dietary plan -------------------------------------------------------
 @router.put("/api/dietary-plan/{plan_id}")
 def update_plan(plan_id: str, p: DietaryPlanUpdate, db=Depends(get_db)):
     cur = db.cursor()
@@ -159,7 +159,7 @@ def update_plan(plan_id: str, p: DietaryPlanUpdate, db=Depends(get_db)):
     return {"message": "Dietary plan updated"}
 
 
-# ── Delete dietary plan ───────────────────────────────────────────────────────
+# -- Delete dietary plan -------------------------------------------------------
 @router.delete("/api/dietary-plan/{plan_id}")
 def delete_plan(plan_id: str, db=Depends(get_db)):
     cur = db.cursor()

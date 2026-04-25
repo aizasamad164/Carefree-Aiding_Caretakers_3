@@ -63,11 +63,6 @@ async function addNotif() {
     }
 }
 
-async function delNotif(id) {
-    const r = await fetch(`/api/notification/${id}`, { method: 'DELETE' });
-    if (r.ok) { toast('Removed'); loadNotifs(); }
-}
-
 // ── Dismiss notification (marks sent + auto-reschedules recurring tasks) ──
 async function dismissNotif(id) {
     await fetch(`/api/notification/dismiss/${id}`, { method: 'POST' });
