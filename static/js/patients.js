@@ -42,6 +42,7 @@ function filterPats() {
         p.patient_id.toLowerCase().startsWith(q)
     );
 
+
     // ── Filter patients panel table ──
     renderPatTbl(filtered);
 

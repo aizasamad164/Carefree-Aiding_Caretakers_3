@@ -241,11 +241,11 @@
                     </div>
                     <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--cream3)">
                         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-                            <div style="font-size:13px;font-weight:600">Insurance Cost Prediction</div>
+                            <div style="font-size:13px;font-weight:600">Medical Cost Prediction</div>
                             <button class="btn btn-primary btn-sm" onclick="predictCostFromPatInfo()">🔮 Predict Cost</button>
                         </div>
                         <div class="pred-box" id="pi-pred-box">
-                            <div class="pred-label">Predicted Insurance Cost</div>
+                            <div class="pred-label">Predicted Medical Cost</div>
                             <div class="pred-value" id="pi-pred-val">—</div>
                         </div>
                     </div>
@@ -561,7 +561,7 @@
             <div class="panel" id="panel-cost">
                 <div class="predictor-layout">
                     <div class="card" style="margin-bottom:0">
-                        <div class="card-hd"><div class="card-ttl">📊 Insurance Cost Predictor</div></div>
+                        <div class="card-hd"><div class="card-ttl">📊 Medical Cost Predictor</div></div>
                         <p style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--muted);margin-bottom:20px">Select a patient to auto-fill, or enter details manually.</p>
                         <div style="margin-bottom:16px">
                             <label class="lbl">Select Patient (optional)</label>
@@ -575,9 +575,9 @@
                             <div class="field"><label class="lbl">Smoker</label><select id="c-smoker"><option value="no">No</option><option value="yes">Yes</option></select></div>
                             <div class="field"><label class="lbl">Region</label><select id="c-region"><option value="northeast">Northeast</option><option value="northwest">Northwest</option><option value="southeast">Southeast</option><option value="southwest">Southwest</option></select></div>
                         </div>
-                        <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="doCost()">Predict Insurance Cost</button>
+                        <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="doCost()">Predict Medical Cost</button>
                         <div class="pred-box" id="cost-box">
-                            <div class="pred-label">Predicted Insurance Cost</div>
+                            <div class="pred-label">Predicted Medical Cost</div>
                             <div class="pred-value" id="cost-val">—</div>
                         </div>
                     </div>
@@ -586,8 +586,12 @@
                         <p style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--muted);margin-bottom:18px">Visual breakdown updates after each prediction</p>
                         <div id="cost-chart-placeholder" class="chart-placeholder"><span style="font-size:32px">📊</span><span>Run a prediction to see cost analysis</span></div>
                         <div id="cost-charts-wrap" style="display:none">
-                            <canvas id="costDonut" height="200"></canvas>
-                            <div style="margin-top:20px"><canvas id="costBar" height="120"></canvas></div>
+                            <div style="position:relative;height:620px">
+                                <canvas id="costDonut"></canvas>
+                            </div>
+                            <div style="margin-top:20px;position:relative;height:250px">
+                                <canvas id="costBar"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -683,11 +687,8 @@
                 setTimeout(function () { const num = parseFloat(document.getElementById('stress-val').textContent); updateStressCharts(isNaN(num) ? 5 : num); }, 400);
             };
 
-            const _origDoCost = window.doCost;
-            window.doCost = async function () {
-                if (_origDoCost) await _origDoCost();
-                setTimeout(function () { const num = parseFloat(document.getElementById('cost-val').textContent.replace(/[^0-9.]/g, '')); updateCostCharts(isNaN(num) ? 11000 : num); }, 400);
-            };
+            
+            
 
             (function initDashboardRowSelection() {
                 let selectedPatientId = null;
@@ -852,22 +853,114 @@
 
         /* ═══ COST CHARTS ═══ */
         let costDonutChart = null, costBarChart = null;
-
         function updateCostCharts(predicted) {
             document.getElementById('cost-chart-placeholder').style.display = 'none';
             document.getElementById('cost-charts-wrap').style.display = 'block';
-            const base = Math.round(predicted * 0.45), smoker = Math.round(predicted * 0.25), bmi = Math.round(predicted * 0.18), age = Math.round(predicted * 0.12);
-            if (costDonutChart) costDonutChart.destroy();
-            costDonutChart = new Chart(document.getElementById('costDonut'), {
+
+            // ── Real factor-based breakdown ───────────────────────────────
+            const isSmoker = document.getElementById('c-smoker').value === 'yes';
+            const bmiVal = parseFloat(document.getElementById('c-bmi').value) || 24.5;
+            const ageVal = parseInt(document.getElementById('c-age').value) || 30;
+
+            // Score each factor 0–1 based on actual input
+            const smokerScore = isSmoker ? 0.35 : 0.05;
+            const bmiScore = bmiVal >= 35 ? 0.22 : bmiVal >= 30 ? 0.16 : bmiVal >= 25 ? 0.10 : 0.05;
+            const ageScore = ageVal >= 60 ? 0.22 : ageVal >= 45 ? 0.15 : ageVal >= 30 ? 0.09 : 0.05;
+            const baseScore = 1 - smokerScore - bmiScore - ageScore;
+
+            const smokerCost = Math.round(predicted * smokerScore);
+            const bmiCost = Math.round(predicted * bmiScore);
+            const ageCost = Math.round(predicted * ageScore);
+            const baseCost = Math.round(predicted * baseScore);
+
+            // ── Donut ─────────────────────────────────────────────────────
+            const donutCanvas = document.getElementById('costDonut');
+            const existingDonut = Chart.getChart(donutCanvas);
+            if (existingDonut) existingDonut.destroy();
+
+            costDonutChart = new Chart(donutCanvas, {
                 type: 'doughnut',
-                data: { labels: ['Base Cost', 'Smoking Risk', 'BMI Factor', 'Age Factor'], datasets: [{ data: [base, smoker, bmi, age], backgroundColor: [C.deep, C.navy3, C.mid, C.mintDk], borderWidth: 4, borderColor: '#fff', hoverOffset: 12 }] },
-                options: { cutout: '65%', plugins: { legend: { position: 'bottom', labels: { font: { family: 'Outfit', size: 11 }, color: C.muted, usePointStyle: true, pointStyleWidth: 8, padding: 16 } }, tooltip: { ...TT, callbacks: { label: ctx => ' Rs. ' + ctx.raw.toLocaleString() } } } }
+                data: {
+                    labels: ['Base Cost', 'Smoking Risk', 'BMI Risk', 'Age Risk'],
+                    datasets: [{
+                        data: [baseCost, smokerCost, bmiCost, ageCost],
+                        backgroundColor: [C.deep, C.navy3, C.mid, C.mintDk],
+                        borderWidth: 4,
+                        borderColor: '#fff',
+                        hoverOffset: 12
+                    }]
+                },
+                options: {
+                    cutout: '65%',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { family: 'Outfit', size: 11 }, color: C.muted, usePointStyle: true, padding: 16 }
+                        },
+                        tooltip: {
+                            ...TT,
+                            callbacks: {
+                                label: ctx => ` Rs. ${ctx.raw.toLocaleString()}  (${Math.round(ctx.raw / predicted * 100)}%)`
+                            }
+                        }
+                    }
+                }
             });
-            if (costBarChart) costBarChart.destroy();
-            costBarChart = new Chart(document.getElementById('costBar'), {
+
+            // ── Bar ───────────────────────────────────────────────────────
+            const barCanvas = document.getElementById('costBar');
+            const existingBar = Chart.getChart(barCanvas);
+            if (existingBar) existingBar.destroy();
+
+            costBarChart = new Chart(barCanvas, {
                 type: 'bar',
-                data: { labels: ['Northeast', 'Northwest', 'Southeast', 'Southwest', 'Your Patient'], datasets: [{ data: [12000, 10500, 11200, 9800, Math.round(predicted)], backgroundColor: [C.pink, C.mintDk, C.mid, C.bright, C.deep], borderRadius: 8, borderSkipped: false, barPercentage: 0.65 }] },
-                options: { responsive: true, plugins: { legend: { display: false }, tooltip: { ...TT, callbacks: { label: ctx => ' Rs. ' + ctx.raw.toLocaleString() } } }, scales: { x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } }, y: { grid: { color: 'rgba(35,25,66,0.05)' }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } } } }
+                data: {
+                    labels: ['Northeast', 'Northwest', 'Southeast', 'Southwest', 'Your Patient'],
+                    datasets: [{
+                        data: [
+                            Math.round(12000 * 280),
+                            Math.round(10500 * 280),
+                            Math.round(11200 * 280),
+                            Math.round(9800 * 280),
+                            Math.round(predicted)
+                        ],
+                        backgroundColor: [C.pink, C.mintDk, C.mid, C.bright, C.deep],
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        barPercentage: 0.65
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            ...TT,
+                            callbacks: { label: ctx => ' Rs. ' + ctx.raw.toLocaleString() }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            border: { display: false },
+                            ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted }
+                        },
+                        y: {
+                            grid: { color: 'rgba(35,25,66,0.05)' },
+                            border: { display: false },
+                            ticks: {
+                                font: { family: 'Outfit', size: 11 },
+                                color: C.muted,
+                                callback: v => 'Rs.' + (v / 1000).toFixed(0) + 'k'
+                            }
+                        }
+                    }
+                }
             });
         }
     </script>

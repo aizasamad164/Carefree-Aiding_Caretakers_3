@@ -34,7 +34,7 @@ function resetCostForm() {
 
 function validateInt(value) {
     const n = Number(value);
-    return Number.isInteger(n) && n > 0;
+    return Number.isInteger(n);
 }
 
 function validatePositiveFloat(value) {
@@ -115,9 +115,18 @@ async function doStress() {
     }
 }
 
+let isProcessingCost = false;
 
 // ── Cost Predictor ────────────────────────────────────────────────────────────
-async function doCost() {
+async function doCost(event) {
+    if (event && event.preventDefault) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+
+    // Add a flag to prevent double-clicking
+    if (isProcessingCost) return;
+    isProcessingCost = true;
 
     try {
         const age = document.getElementById('c-age').value;
@@ -131,7 +140,7 @@ async function doCost() {
             throw new Error('BMI must be positive');
 
         if (!validateInt(children) || children < 0)
-            throw new Error('Children must be 0+');
+            throw new Error('Children value invalid');
 
         const body = {
             age: parseInt(age),
@@ -161,14 +170,21 @@ async function doCost() {
 
         if (!r.ok) throw new Error(d.detail || 'Cost prediction failed');
 
+        const finalCost = d.predicted_cost * 280;
+
         document.getElementById('cost-val').textContent =
-            `$${d.predicted_cost.toLocaleString()}`;
+            `Rs. ${finalCost.toLocaleString()}`;
 
         document.getElementById('cost-box').classList.add('show');
+
+        updateCostCharts(finalCost);
 
     } catch (err) {
         toast(err.message, 'err');
         console.error(err);
+    } finally {
+        // 3. RELEASE THE LOCK so you can click again
+        isProcessingCost = false;
     }
 }
 
@@ -176,29 +192,28 @@ async function doCost() {
 async function predictCostFromPatInfo() {
     const pid = document.getElementById('pi-sel').value;
 
-    // 1. Get inputs from the DOM
+    // Pull directly from the patient form fields
     const age = parseInt(document.getElementById('pi-age').value);
     const children = parseInt(document.getElementById('pi-children').value) || 0;
     const region = document.getElementById('pi-region').value;
-    const bmi = computeBMI();
+    const gender = radio.gender || 'Male';
+    const smoker = radio.smoker || 'No';
 
-    // 2. Validation before sending
-    if (isNaN(age) || !validateRange(age, 1, 120)) {
-        toast('Patient age must be between 1 and 120', 'err');
-        return;
-    }
+    // Calculate BMI from height and weight
+    const h = parseFloat(document.getElementById('pi-height').value);
+    const w = parseFloat(document.getElementById('pi-weight').value);
 
-    // 3. Robust way to get Radio/Selection values 
-    // (Assuming you might not have a global 'radio' object)
-    const genderInp = document.querySelector('input[name="gender"]:checked')?.value || 'male';
-    const smokerInp = document.querySelector('input[name="smoker"]:checked')?.value || 'no';
+    if (!h || !w) { toast('Enter height and weight first', 'err'); return; }
+    if (isNaN(age) || !validateRange(age, 1, 120)) { toast('Age must be 1–120', 'err'); return; }
+
+    const bmi = parseFloat((w / ((h / 100) ** 2)).toFixed(1));
 
     const body = {
         age: age,
-        sex: genderInp.toLowerCase(),
+        sex: gender.toLowerCase(),
         bmi: bmi,
         children: children,
-        smoker: smokerInp.toLowerCase(),
+        smoker: smoker.toLowerCase(),
         region: region,
     };
 
@@ -212,26 +227,18 @@ async function predictCostFromPatInfo() {
             body: JSON.stringify(body)
         });
 
-        // Parse the JSON once, here.
         const d = await r.json();
+        if (!r.ok) { toast(d.detail || 'Prediction failed', 'err'); return; }
 
-        if (!r.ok) {
-            // Now 'd' exists, so this will NOT crash
-            toast(d.detail || 'Prediction failed', 'err');
-            return;
-        }
-
-        // 4. Update UI on success
-        document.getElementById('pi-pred-val').textContent = `$${d.predicted_cost.toLocaleString()}`;
+        const finalCost = d.predicted_cost * 280;
+        document.getElementById('pi-pred-val').textContent = `Rs. ${finalCost.toLocaleString()}`;
         document.getElementById('pi-pred-box').classList.add('show');
 
     } catch (err) {
-        // This catches network timeouts or server crashes
         console.error("Fetch Error:", err);
         toast('Connection lost or server error', 'err');
     }
 }
-
 
 // ── Auto-fill cost form from selected patient ─────────────────────────────────
 async function fillCostFromPat() {

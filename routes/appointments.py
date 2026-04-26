@@ -1,5 +1,5 @@
 import random
-import oracledb
+import cx_Oracle as oracledb
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
 from models import ApptCreate

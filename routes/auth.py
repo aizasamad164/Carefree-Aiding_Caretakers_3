@@ -60,6 +60,20 @@ def signup(r: SignupReq, db=Depends(get_db)):
     if cur.fetchone()[0]:
         raise HTTPException(400, "Username already taken")
 
+    # Check contact uniqueness
+    cur.execute("SELECT COUNT(*) FROM Caretaker WHERE Caretaker_Contact=:1", (r.contact,))
+    if cur.fetchone()[0]:
+        raise HTTPException(400, "Contact already taken")
+
+    if not r.contact.isdigit() or len(r.contact) != 11:
+        raise HTTPException(400, "Invalid contact")
+
+    if r.age < 0:
+        raise HTTPException(400, "Invalid age")
+
+    if r.experience_years < 0:
+        raise HTTPException(400, "Invalid experience years")
+
     cid = gen_id("C", "Caretaker", "CaretakerID", db)
     pw  = gen_pw()
 
