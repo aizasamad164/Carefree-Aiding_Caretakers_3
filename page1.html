@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Carefree — Caretaker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/caretaker.css" />
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+</head>
+<body>
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+        <div class="sb-logo">
+            <div class="sb-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z" /></svg>
+            </div>
+            <span class="sb-name">Care<span>free</span></span>
+        </div>
+        <div class="sb-user">
+            <div class="sb-uname" id="sb-name">Caretaker</div>
+            <div class="sb-urole">Caretaker Panel</div>
+        </div>
+        <nav class="sb-nav">
+            <div class="sb-section">Overview</div>
+            <div class="sb-item active" data-p="dashboard" onclick="nav('dashboard')"><span class="em">🏠</span>Dashboard</div>
+            <div class="sb-section">Patient Management</div>
+            <div class="sb-item" data-p="patients" onclick="nav('patients')"><span class="em">👥</span>Patients</div>
+            <div class="sb-item" data-p="patinfo" onclick="nav('patinfo')"><span class="em">📋</span>Patient Information</div>
+            <div class="sb-item" data-p="tasks" onclick="nav('tasks')"><span class="em">✅</span>Task Manager</div>
+            <div class="sb-item" data-p="appointments" onclick="nav('appointments')"><span class="em">📅</span>Appointments</div>
+            <div class="sb-item" data-p="expenses" onclick="nav('expenses')"><span class="em">💰</span>Expense Tracker</div>
+            <div class="sb-section">Health Monitoring</div>
+            <div class="sb-item" data-p="vitals" onclick="nav('vitals')"><span class="em">🫀</span>Vitals</div>
+            <div class="sb-item" data-p="symptoms" onclick="nav('symptoms')"><span class="em">🩺</span>Symptoms</div>
+            <div class="sb-section">ML Predictions</div>
+            <div class="sb-item" data-p="stress" onclick="nav('stress')"><span class="em">🧠</span>Stress Predictor</div>
+            <div class="sb-item" data-p="cost" onclick="nav('cost')"><span class="em">📊</span>Cost Predictor</div>
+        </nav>
+        <div class="sb-footer">
+            <button class="btn-logout" onclick="logout()">← Sign Out</button>
+        </div>
+    </aside>
+
+    <!-- ── Main ── -->
+    <div class="main">
+        <header class="header">
+            <div class="h-title" id="h-title">Dashboard</div>
+            <div style="display:flex;gap:10px;align-items:center">
+                <div class="h-search">
+                    <span>🔍</span>
+                    <input id="gsearch" placeholder="Search patients…" oninput="filterPatientsByPrefix(this.value)" />
+                </div>
+                <div class="notif-bell" onclick="toggleNotif()">
+                    🔔<span class="notif-count" id="notif-count">0</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="notif-overlay" id="notif-overlay" onclick="toggleNotif()"></div>
+        <div class="notif-panel" id="notif-panel">
+            <div class="notif-header">
+                <div class="notif-header-title">🔔 Notifications</div>
+                <button class="notif-close" onclick="toggleNotif()">✕</button>
+            </div>
+            <div class="notif-body" id="notif-body"></div>
+            <div class="notif-footer">
+                <div style="font-size:12px;font-weight:600;margin-bottom:10px">Add Notification</div>
+                <input id="notif-name" placeholder="Title…" />
+                <textarea id="notif-desc" placeholder="Description…" style="min-height:60px"></textarea>
+                <button class="btn btn-primary" style="width:100%" onclick="addNotif()">+ Add</button>
+            </div>
+        </div>
+
+        <div class="content">
+
+            <!-- ── Dashboard ── -->
+            <div class="panel active" id="panel-dashboard">
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-num" id="st-pats">0</div>
+                        <div class="stat-lbl">Total Patients</div>
+                        <div class="stat-bar"><div class="stat-bar-fill" id="sb-pats"></div></div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-num" id="st-tasks">—</div>
+                        <div class="stat-lbl">Open Tasks</div>
+                        <div class="stat-bar"><div class="stat-bar-fill" style="background:linear-gradient(90deg,#e980fc,#ffd2fc)"></div></div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-num" id="st-appts">—</div>
+                        <div class="stat-lbl">Appointments</div>
+                        <div class="stat-bar"><div class="stat-bar-fill" style="background:linear-gradient(90deg,#b96ac9,#e980fc)"></div></div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-num" id="st-exps">—</div>
+                        <div class="stat-lbl">Expenses Logged</div>
+                        <div class="stat-bar"><div class="stat-bar-fill" style="background:linear-gradient(90deg,#a8f0e0,#ddfff7)"></div></div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-hd">
+                        <div class="card-ttl">Patients Under Your Care</div>
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <span id="dash-selected-label" style="font-family:'Outfit',sans-serif;font-size:11px;color:var(--muted)">Click a row to view insights</span>
+                            <button class="btn btn-ghost btn-sm" onclick="nav('patients')">View All →</button>
+                        </div>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table id="dash-tbl">
+                            <thead><tr><th>ID</th><th>Name</th><th>Guardian</th><th>Contact</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:20px">
+                    <div class="card" style="margin-bottom:0;display:flex;flex-direction:column;align-items:center">
+                        <div class="card-hd" style="width:100%">
+                            <div class="card-ttl">Task Priorities</div>
+                            <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif" id="insight-patient-label">All patients</span>
+                        </div>
+                        <div style="position:relative;width:160px;height:160px;margin:4px auto 0">
+                            <canvas id="taskPriorityDonut" width="160" height="160"></canvas>
+                            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+                                <div style="font-family:'Playfair Display',serif;font-size:22px;color:#231942;font-weight:700" id="taskTotalCount">0</div>
+                                <div style="font-family:'Outfit',sans-serif;font-size:10px;color:#5a4d5e">tasks</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:12px;margin-top:12px;font-family:'Outfit',sans-serif;font-size:11px;color:#5a4d5e;flex-wrap:wrap;justify-content:center">
+                            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#231942;margin-right:4px"></span>High</span>
+                            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#b96ac9;margin-right:4px"></span>Medium</span>
+                            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#a8f0e0;margin-right:4px"></span>Low</span>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-bottom:0">
+                        <div class="card-hd">
+                            <div class="card-ttl">Appointments</div>
+                            <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif">By category · hover for dates</span>
+                        </div>
+                        <canvas id="apptCategoryChart" height="160"></canvas>
+                    </div>
+                    <div class="card" style="margin-bottom:0">
+                        <div class="card-hd">
+                            <div class="card-ttl">Expenses</div>
+                            <span style="font-size:11px;color:var(--muted);font-family:'Outfit',sans-serif">By category</span>
+                        </div>
+                        <canvas id="expCategoryChart" height="160"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-hd">
+                        <div class="card-ttl">Vitals Overview</div>
+                        <button class="btn btn-ghost btn-sm" onclick="nav('vitals')">View All →</button>
+                    </div>
+                    <div class="chart-container" style="position:relative;height:350px;width:100%">
+                        <div id="dash-vitals-placeholder" class="chart-empty" style="display:none">
+                            <span style="font-size:32px">🫀</span>
+                            <span>No vitals recorded yet</span>
+                        </div>
+                        <canvas id="dashVitalsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Patients ── -->
+            <div class="panel" id="panel-patients">
+                <div class="card">
+                    <div class="card-hd">
+                        <div class="card-ttl">Patients Managed by You</div>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn btn-gold btn-sm" onclick="openAddPat()">+ Add Patient</button>
+                            <button class="btn btn-danger btn-sm" onclick="removeSelectedPat()">Remove Selected</button>
+                        </div>
+                    </div>
+                    <div class="tbl-wrap">
+                        <table id="pat-tbl">
+                            <thead><tr><th>Patient ID</th><th>Name</th><th>Guardian</th><th>Contact</th><th>Notes</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Patient Information ── -->
+            <div class="panel" id="panel-patinfo">
+                <div class="card">
+                    <div class="card-hd">
+                        <div class="card-ttl" id="pi-title">Patient Information</div>
+                        <div style="display:flex;gap:8px">
+                            <button class="btn btn-gold btn-sm" onclick="savePat()">💾 Save Patient</button>
+                            <button class="btn btn-ghost btn-sm" onclick="clearPatForm()">Clear</button>
+                        </div>
+                    </div>
+                    <div style="margin-bottom:14px">
+                        <label class="lbl">Select existing patient to edit (or fill form below for new)</label>
+                        <select id="pi-sel" onchange="loadPatIntoForm()" style="max-width:300px"><option value="">— New Patient —</option></select>
+                    </div>
+                    <div class="form-grid">
+                        <div class="field"><label class="lbl">Patient Name</label><input id="pi-name" placeholder="Full name" /></div>
+                        <div class="field"><label class="lbl">Age</label><input id="pi-age" type="number" placeholder="e.g. 45" /></div>
+                        <div class="field"><label class="lbl">Height (cm)</label><input id="pi-height" type="number" placeholder="170" /></div>
+                        <div class="field"><label class="lbl">Weight (kg)</label><input id="pi-weight" type="number" placeholder="70" /></div>
+                        <div class="field"><label class="lbl">Children</label><input id="pi-children" type="number" placeholder="0" /></div>
+                        <div class="field">
+                            <label class="lbl">Region</label>
+                            <select id="pi-region">
+                                <option value="northeast">Northeast</option>
+                                <option value="northwest">Northwest</option>
+                                <option value="southeast">Southeast</option>
+                                <option value="southwest">Southwest</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label class="lbl">Gender</label>
+                            <div class="rtog">
+                                <div class="rtog-opt" onclick="setR('gender','Male',this)">Male</div>
+                                <div class="rtog-opt" onclick="setR('gender','Female',this)">Female</div>
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="lbl">Smoker</label>
+                            <div class="rtog">
+                                <div class="rtog-opt" onclick="setR('smoker','Yes',this)">Yes</div>
+                                <div class="rtog-opt" onclick="setR('smoker','No',this)">No</div>
+                            </div>
+                        </div>
+                        <div class="field"><label class="lbl">Guardian Name</label><input id="pi-gname" placeholder="Guardian full name" /></div>
+                        <div class="field"><label class="lbl">Guardian Contact</label><input id="pi-gcontact" placeholder="Phone number" /></div>
+                        <div class="field"><label class="lbl">Relation to Patient</label><input id="pi-grelation" placeholder="e.g. Father, Mother, Sibling" /></div>
+                        <div class="field f-full"><label class="lbl">Notes</label><textarea id="pi-notes" placeholder="Additional notes…"></textarea></div>
+                    </div>
+                    <div id="pi-pw-section" style="margin-top:18px;padding-top:18px;border-top:1px solid var(--cream3);display:block;">
+                        <div style="display:flex;align-items:center;justify-content:space-between">
+                            <div style="font-size:13px;font-weight:600">Guardian Access</div>
+                            <button id="show-pw-btn" type="button" class="btn btn-primary btn-sm">🔑 Show Password</button>
+                        </div>
+                    </div>
+                    <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--cream3)">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                            <div style="font-size:13px;font-weight:600">Medical Cost Prediction</div>
+                            <button class="btn btn-primary btn-sm" onclick="predictCostFromPatInfo()">🔮 Predict Cost</button>
+                        </div>
+                        <div class="pred-box" id="pi-pred-box">
+                            <div class="pred-label">Predicted Medical Cost</div>
+                            <div class="pred-value" id="pi-pred-val">—</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Tasks ── -->
+            <div class="panel" id="panel-tasks">
+                <div class="sel-row">
+                    <label>Patient:</label>
+                    <select id="t-patsel" onchange="loadTasks()"><option value="">— Select Patient —</option></select>
+                    <div class="pills" style="margin:0">
+                        <div class="pill active" onclick="setPillFilter('tasks','All',this)">All</div>
+                        <div class="pill" onclick="setPillFilter('tasks','Today',this)">Today</div>
+                        <div class="pill" onclick="setPillFilter('tasks','Weekly',this)">This Week</div>
+                        <div class="pill" onclick="setPillFilter('tasks','Monthly',this)">This Month</div>
+                    </div>
+                    <button class="btn btn-gold btn-sm" onclick="toggleSec('task-form')">+ Add Task</button>
+                </div>
+                <div class="exp-section" id="task-form">
+                    <div style="font-size:13px;font-weight:600;margin-bottom:14px">New Task</div>
+                    <div class="form-grid">
+                        <div class="field"><label class="lbl">Task Name</label><input id="tf-name" placeholder="e.g. Morning Medication" /></div>
+                        <div class="field"><label class="lbl">Date & Time</label><input id="tf-time" type="datetime-local" /></div>
+                        <div class="field">
+                            <label class="lbl">Frequency</label>
+                            <select id="tf-freq">
+                                <option value="Daily">Daily</option>
+                                <option value="Alternate">Alternate Day</option>
+                                <option value="Weekly">Weekly</option>
+                                <option value="Monthly">Monthly</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label class="lbl">Priority</label>
+                            <select id="tf-pri">
+                                <option value="High">High</option>
+                                <option value="Medium" selected>Medium</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        <div class="field f-full"><label class="lbl">Description</label><textarea id="tf-desc" placeholder="Task details…"></textarea></div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:10px">
+                        <button class="btn btn-primary btn-sm" onclick="addTask()">Add Task</button>
+                        <button class="btn btn-ghost btn-sm" onclick="toggleSec('task-form')">Cancel</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="tbl-wrap">
+                        <table id="task-tbl">
+                            <thead><tr><th>Task</th><th>Date & Time</th><th>Frequency</th><th>Priority</th><th>Description</th><th></th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Appointments ── -->
+            <div class="panel" id="panel-appointments">
+                <div class="sel-row">
+                    <label>Patient:</label>
+                    <select id="a-patsel" onchange="loadAppts()"><option value="">— Select Patient —</option></select>
+                    <div class="pills" style="margin:0">
+                        <div class="pill active" onclick="setPillFilter('appts','All',this)">All</div>
+                        <div class="pill" onclick="setPillFilter('appts','Today',this)">Today</div>
+                        <div class="pill" onclick="setPillFilter('appts','Weekly',this)">This Week</div>
+                        <div class="pill" onclick="setPillFilter('appts','Monthly',this)">This Month</div>
+                    </div>
+                    <button class="btn btn-gold btn-sm" onclick="toggleSec('appt-form')">+ Add Appointment</button>
+                </div>
+                <div class="exp-section" id="appt-form">
+                    <div style="font-size:13px;font-weight:600;margin-bottom:14px">New Appointment</div>
+                    <div class="form-grid">
+                        <div class="field f-full">
+                            <label class="lbl">Select Existing Doctor</label>
+                            <select id="af-doc-select" onchange="onDoctorSelect()" style="width:100%"><option value="NEW">-- Add New Doctor --</option></select>
+                        </div>
+                        <div class="field"><label class="lbl">Doctor Name</label><input id="af-doctor" placeholder="Dr. full name" /></div>
+                        <div class="field"><label class="lbl">Specialization</label><input id="af-spec" placeholder="e.g. Cardiologist" /></div>
+                        <div class="field"><label class="lbl">Date & Time</label><input id="af-time" type="datetime-local" /></div>
+                        <div class="field">
+                            <label class="lbl">Category</label>
+                            <select id="af-cat">
+                                <option>Consultation</option>
+                                <option>Follow-up</option>
+                                <option>Medical Test</option>
+                                <option>Therapy</option>
+                                <option>Emergency</option>
+                            </select>
+                        </div>
+                        <div class="field f-full"><label class="lbl">Description</label><textarea id="af-desc" placeholder="Details…"></textarea></div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:10px">
+                        <button class="btn btn-primary btn-sm" onclick="addAppt()">Add Appointment</button>
+                        <button class="btn btn-ghost btn-sm" onclick="toggleSec('appt-form')">Cancel</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="tbl-wrap">
+                        <table id="appt-tbl">
+                            <thead><tr><th>Doctor</th><th>Category</th><th>Date & Time</th><th>Status</th><th>Description</th><th></th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Expenses ── -->
+            <div class="panel" id="panel-expenses">
+                <div class="sel-row">
+                    <label>Patient:</label>
+                    <select id="e-patsel" onchange="loadExps()"><option value="">— Select Patient —</option></select>
+                    <button class="btn btn-gold btn-sm" onclick="toggleSec('exp-form')">+ Add Expense</button>
+                </div>
+                <div class="exp-section" id="exp-form">
+                    <div style="font-size:13px;font-weight:600;margin-bottom:14px">New Expense</div>
+                    <div class="form-grid g3">
+                        <div class="field"><label class="lbl">Expense Name</label><input id="ef-name" placeholder="e.g. Medication" /></div>
+                        <div class="field"><label class="lbl">Amount (Rs.)</label><input id="ef-amt" type="number" placeholder="0.00" min="0" step="0.01" /></div>
+                        <div class="field">
+                            <label class="lbl">Category</label>
+                            <select id="ef-cat">
+                                <option>Medication</option>
+                                <option>Laboratory Tests</option>
+                                <option>Procedures & Surgery</option>
+                                <option>Hospitalization</option>
+                                <option>Emergency</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:10px">
+                        <button class="btn btn-primary btn-sm" onclick="addExp()">Add Expense</button>
+                        <button class="btn btn-ghost btn-sm" onclick="toggleSec('exp-form')">Cancel</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="tbl-wrap">
+                        <table id="exp-tbl">
+                            <thead><tr><th>Name</th><th>Category</th><th>Amount</th><th>Date</th><th></th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div style="display:flex;justify-content:flex-end;padding:20px;border-top:1px solid #eee;background:#fafafa;">
+                        <div style="text-align:right;">
+                            <div style="font-size:12px;font-weight:600;color:#888;text-transform:uppercase;margin-bottom:4px;">Remaining Balance</div>
+                            <div id="patient-balance-display" style="font-size:22px;font-weight:700;color:#2ecc71;">Rs. 0.00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Vitals ── -->
+            <div class="panel" id="panel-vitals">
+                <div class="sel-row">
+                    <label>Patient:</label>
+                    <select id="v-patsel" onchange="loadVitals()"><option value="">— Select Patient —</option></select>
+                    <button id="btn-new-vital" class="btn btn-gold btn-sm" onclick="openVitalsForm()">+ New Vital</button>
+                </div>
+                <div class="exp-section" id="vitals-form">
+                    <div style="font-size:13px;font-weight:600;margin-bottom:14px">Record New Vitals</div>
+                    <div class="form-grid">
+                        <div class="field"><label class="lbl">Patient</label><select id="vf-patsel"><option value="">— Select Patient —</option></select></div>
+                        <div class="field">
+                            <label class="lbl">Category</label>
+                            <select id="vf-cat">
+                                <option value="Cardiac">Cardiac</option>
+                                <option value="Respiratory">Respiratory</option>
+                                <option value="General">General</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="field"><label class="lbl">Pulse Rate (bpm)</label><input id="vf-pulse" type="number" placeholder="e.g. 72" min="20" max="250" /></div>
+                        <div class="field"><label class="lbl">Blood Pressure (systolic)</label><input id="vf-bp" type="number" placeholder="e.g. 120" min="50" max="300" /></div>
+                        <div class="field"><label class="lbl">Respiratory Rate (/min)</label><input id="vf-resp" type="number" placeholder="e.g. 16" min="5" max="60" /></div>
+                        <div class="field"><label class="lbl">Oxygen Sat (%)</label><input id="vf-spo2" type="number" placeholder="e.g. 98" min="50" max="100" step="0.1" /></div>
+                        <div class="field"><label class="lbl">Blood Glucose (mg/dL)</label><input id="vf-glucose" type="number" placeholder="e.g. 95" min="20" max="600" /></div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:12px">
+                        <button class="btn btn-primary btn-sm" onclick="saveVitals()">Save Vitals</button>
+                        <button class="btn btn-ghost btn-sm" onclick="toggleSec('vitals-form')">Cancel</button>
+                    </div>
+                </div>
+                <div class="vitals-chart-card">
+                    <div class="card-hd" style="margin-bottom:4px">
+                        <div class="card-ttl">Vitals Trend</div>
+                        <span style="font-size:11px;color:var(--muted)">Last 10 readings · hover for details</span>
+                    </div>
+                    <div class="vitals-legend" id="vitals-legend" style="display:none">
+                        <span><i style="background:#e980fc"></i>Pulse (bpm)</span>
+                        <span><i style="background:#231942"></i>BP Systolic</span>
+                        <span><i style="background:#a8f0e0"></i>SpO₂ (%)</span>
+                        <span><i style="background:#b96ac9"></i>Blood Glucose</span>
+                        <span><i style="background:#ffd2fc;border:1px solid #b96ac9"></i>Resp. Rate</span>
+                    </div>
+                    <div id="vitals-chart-placeholder" class="chart-empty" style="margin-top:12px">
+                        <span style="font-size:36px">🫀</span>
+                        <span>Select a patient with recorded vitals to see trends</span>
+                    </div>
+                    <canvas id="vitalsChart" height="100" style="display:none;margin-top:12px"></canvas>
+                </div>
+                <div class="card">
+                    <div class="card-hd"><div class="card-ttl">Vitals History</div></div>
+                    <div class="tbl-wrap">
+                        <table id="vitals-tbl">
+                            <thead><tr><th>Category</th><th>Recorded</th><th>Pulse / BP</th><th>O₂ Sat</th><th>Blood Glucose</th><th></th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Symptoms ── -->
+            <div class="panel" id="panel-symptoms">
+                <div class="sel-row">
+                    <label>Patient:</label>
+                    <select id="sym-patsel" onchange="loadSymptoms()"><option value="">— Select Patient —</option></select>
+                    <button class="btn btn-gold btn-sm" onclick="toggleSymptomForm()">+ Add Symptom</button>
+                </div>
+                <div class="exp-section" id="sym-form">
+                    <div class="sym-tabs">
+                        <button class="sym-tab active" id="sym-tab-predefined" onclick="showSymptomTab('predefined')">From Master List</button>
+                        <button class="sym-tab" id="sym-tab-custom" onclick="showSymptomTab('custom')">Custom Symptom</button>
+                    </div>
+                    <div id="sym-predefined-form">
+                        <div class="field">
+                            <label class="lbl">Select Symptom</label>
+                            <select id="sym-master-sel" style="width:100%"><option value="">— Loading… —</option></select>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:8px">
+                            <button class="btn btn-primary btn-sm" onclick="addPredefinedSymptom()">Add Symptom</button>
+                            <button class="btn btn-ghost btn-sm" onclick="toggleSymptomForm()">Cancel</button>
+                        </div>
+                    </div>
+                    <div id="sym-custom-form" style="display:none">
+                        <div class="form-grid">
+                            <div class="field"><label class="lbl">Symptom Name</label><input id="sym-name" placeholder="e.g. Persistent Cough" /></div>
+                            <div class="field"><label class="lbl">Type / Category</label><input id="sym-type" placeholder="e.g. Respiratory" /></div>
+                            <div class="field">
+                                <label class="lbl">Severity</label>
+                                <select id="sym-severity">
+                                    <option value="Mild">Mild</option>
+                                    <option value="Moderate" selected>Moderate</option>
+                                    <option value="High">High</option>
+                                </select>
+                            </div>
+                            <div class="field f-full"><label class="lbl">Description</label><textarea id="sym-desc" placeholder="Describe the symptom…" style="min-height:60px"></textarea></div>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:8px">
+                            <button class="btn btn-primary btn-sm" onclick="addCustomSymptom()">Add Custom Symptom</button>
+                            <button class="btn btn-ghost btn-sm" onclick="toggleSymptomForm()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="symptoms-layout">
+                    <div class="sym-chart-card">
+                        <div class="card-hd" style="margin-bottom:8px">
+                            <div class="card-ttl">Severity Breakdown</div>
+                            <span style="font-size:11px;color:var(--muted)">Hover bars for details</span>
+                        </div>
+                        <div id="sym-chart-placeholder" class="chart-empty">
+                            <span style="font-size:36px">🩺</span>
+                            <span>Select a patient with recorded symptoms</span>
+                        </div>
+                        <canvas id="symptomsChart" height="200" style="display:none"></canvas>
+                    </div>
+                    <div>
+                        <div id="sym-list">
+                            <div class="empty"><div class="empty-icon">🩺</div><p>Select a patient to view their symptoms.</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Stress Predictor ── -->
+            <div class="panel" id="panel-stress">
+                <div class="predictor-layout">
+                    <div class="card" style="margin-bottom:0">
+                        <div class="card-hd"><div class="card-ttl">🧠 Stress Level Predictor</div></div>
+                        <p style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--muted);margin-bottom:20px">Answer the following to deduce your patient's stress level</p>
+                        <div class="form-grid">
+                            <div class="field"><label class="lbl">Sleep Hours</label><input id="s-sleep" type="number" placeholder="7" min="0" max="24" /></div>
+                            <div class="field"><label class="lbl">Sleep Quality (1–10)</label><input id="s-qual" type="number" placeholder="7" min="1" max="10" /></div>
+                            <div class="field"><label class="lbl">BP Systolic</label><input id="s-sys" type="number" placeholder="120" /></div>
+                            <div class="field"><label class="lbl">BP Diastolic</label><input id="s-dia" type="number" placeholder="80" /></div>
+                            <div class="field"><label class="lbl">Physical Activity (1–100)</label><input id="s-act" type="number" placeholder="50" min="1" max="100" /></div>
+                            <div class="field"><label class="lbl">Daily Steps</label><input id="s-steps" type="number" placeholder="8000" /></div>
+                            <div class="field"><label class="lbl">Heart Rate (bpm)</label><input id="s-hr" type="number" placeholder="72" /></div>
+                            <div class="field">
+                                <label class="lbl">BMI Category</label>
+                                <select id="s-bmi"><option>Normal</option><option>Overweight</option><option>Obese</option></select>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="doStress()">Predict Stress Level</button>
+                        <div class="pred-box" id="stress-box">
+                            <div class="pred-label">Predicted Stress Level</div>
+                            <div class="pred-value" id="stress-val">—</div>
+                        </div>
+                    </div>
+                    <div class="predictor-chart-card">
+                        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--navy);margin-bottom:6px">Stress Analysis</div>
+                        <p style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--muted);margin-bottom:18px">Visual breakdown updates after each prediction</p>
+                        <div id="stress-chart-placeholder" class="chart-placeholder"><span style="font-size:32px">🧠</span><span>Run a prediction to see your analysis</span></div>
+                        <div id="stress-charts-wrap" style="display:none">
+                            <canvas id="stressRadar" height="220"></canvas>
+                            <div style="margin-top:20px"><canvas id="stressBar" height="120"></canvas></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Cost Predictor ── -->
+            <div class="panel" id="panel-cost">
+                <div class="predictor-layout">
+                    <div class="card" style="margin-bottom:0">
+                        <div class="card-hd"><div class="card-ttl">📊 Medical Cost Predictor</div></div>
+                        <p style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--muted);margin-bottom:20px">Select a patient to auto-fill, or enter details manually.</p>
+                        <div style="margin-bottom:16px">
+                            <label class="lbl">Select Patient (optional)</label>
+                            <select id="c-patsel" onchange="handleCostModeChange()" style="max-width:300px"><option value="">— Manual Entry —</option></select>
+                        </div>
+                        <div class="form-grid">
+                            <div class="field"><label class="lbl">Age</label><input id="c-age" type="number" placeholder="35" /></div>
+                            <div class="field"><label class="lbl">Sex</label><select id="c-sex"><option value="male">Male</option><option value="female">Female</option></select></div>
+                            <div class="field"><label class="lbl">BMI</label><input id="c-bmi" type="number" step="0.1" placeholder="24.5" /></div>
+                            <div class="field"><label class="lbl">Children</label><input id="c-children" type="number" placeholder="0" /></div>
+                            <div class="field"><label class="lbl">Smoker</label><select id="c-smoker"><option value="no">No</option><option value="yes">Yes</option></select></div>
+                            <div class="field"><label class="lbl">Region</label><select id="c-region"><option value="northeast">Northeast</option><option value="northwest">Northwest</option><option value="southeast">Southeast</option><option value="southwest">Southwest</option></select></div>
+                        </div>
+                        <button class="btn btn-primary" style="margin-top:16px;width:100%" onclick="doCost()">Predict Medical Cost</button>
+                        <div class="pred-box" id="cost-box">
+                            <div class="pred-label">Predicted Medical Cost</div>
+                            <div class="pred-value" id="cost-val">—</div>
+                        </div>
+                    </div>
+                    <div class="predictor-chart-card">
+                        <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--navy);margin-bottom:6px">Cost Breakdown</div>
+                        <p style="font-family:'Outfit',sans-serif;font-size:12px;color:var(--muted);margin-bottom:18px">Visual breakdown updates after each prediction</p>
+                        <div id="cost-chart-placeholder" class="chart-placeholder"><span style="font-size:32px">📊</span><span>Run a prediction to see cost analysis</span></div>
+                        <div id="cost-charts-wrap" style="display:none">
+                            <div style="position:relative;height:620px">
+                                <canvas id="costDonut"></canvas>
+                            </div>
+                            <div style="margin-top:20px;position:relative;height:250px">
+                                <canvas id="costBar"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/js/caretaker.js"></script>
+    <script src="/static/js/notifications.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+    <script src="/static/js/patients.js"></script>
+    <script src="/static/js/tasks.js"></script>
+    <script src="/static/js/appointments.js"></script>
+    <script src="/static/js/expenses.js"></script>
+    <script src="/static/js/vitals.js"></script>
+    <script src="/static/js/symptoms.js"></script>
+    <script src="/static/js/predictions.js"></script>
+
+    <script>
+        const C = {
+            deep: '#231942', navy2: '#3d1f5e', navy3: '#5e2a7a',
+            mid: '#b96ac9', bright: '#e980fc', pink: '#ffd2fc',
+            mint: '#ddfff7', mintDk: '#a8f0e0', muted: '#5a4d5e',
+            deepA: 'rgba(35,25,66,0.10)', midA: 'rgba(185,106,201,0.14)',
+            brightA: 'rgba(233,128,252,0.14)', pinkA: 'rgba(255,210,252,0.20)',
+            mintA: 'rgba(168,240,224,0.18)',
+        };
+
+        const TT = { backgroundColor: C.deep, titleFont: { family: 'Playfair Display', size: 13 }, bodyFont: { family: 'Outfit', size: 12 }, padding: 12, cornerRadius: 10 };
+
+        function makeVitalsDatasets(d) {
+            const def = { pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 5, tension: 0.4, fill: false };
+            return [
+                { label: 'Pulse (bpm)', data: d?.pulse || [], borderColor: C.bright, backgroundColor: C.brightA, pointBackgroundColor: C.bright, borderWidth: 2.5, yAxisID: 'yMain', ...def },
+                { label: 'BP Systolic (mmHg)', data: d?.bp || [], borderColor: C.deep, backgroundColor: C.deepA, pointBackgroundColor: C.deep, borderWidth: 2.5, yAxisID: 'yMain', ...def },
+                { label: 'SpO₂ (%)', data: d?.spo2 || [], borderColor: C.mintDk, backgroundColor: C.mintA, pointBackgroundColor: C.mintDk, borderWidth: 2.5, yAxisID: 'ySec', ...def },
+                { label: 'Blood Glucose (mg/dL)', data: d?.glucose || [], borderColor: C.mid, backgroundColor: C.midA, pointBackgroundColor: C.mid, borderWidth: 2.5, yAxisID: 'yMain', ...def },
+                { label: 'Resp. Rate (/min)', data: d?.resp || [], borderColor: C.pink, backgroundColor: C.pinkA, pointBackgroundColor: C.pink, pointBorderColor: C.navy3, borderWidth: 2, borderDash: [5, 4], yAxisID: 'ySec', ...def }
+            ];
+        }
+
+        function vitalsChartOptions() {
+            return {
+                responsive: true, interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'top', labels: { font: { family: 'Outfit', size: 12 }, color: C.muted, usePointStyle: true, pointStyleWidth: 10, padding: 14 } }, tooltip: { ...TT } },
+                scales: {
+                    x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } },
+                    yMain: { type: 'linear', position: 'left', grid: { color: 'rgba(35,25,66,0.05)' }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } },
+                    ySec: { type: 'linear', position: 'right', grid: { drawOnChartArea: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } }
+                }
+            };
+        }
+
+        window.buildVitalsMultilineChart = function (canvasId, labels, data) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return null;
+            const existing = Chart.getChart(canvas);
+            if (existing) existing.destroy();
+            canvas.style.display = 'block';
+            const leg = document.getElementById('vitals-legend');
+            if (leg) leg.style.display = 'flex';
+            return new Chart(canvas, { type: 'line', data: { labels: labels || [], datasets: makeVitalsDatasets(data) }, options: vitalsChartOptions() });
+        };
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            requestAnimationFrame(() => {
+                ['vitalsChart', 'dashVitalsChart'].forEach(id => {
+                    const canvas = document.getElementById(id); if (!canvas) return;
+                    const existing = Chart.getChart(canvas); if (!existing) return;
+                    const lbl = existing.data.labels || []; existing.destroy();
+                    new Chart(canvas, { type: 'line', data: { labels: lbl, datasets: makeVitalsDatasets(null) }, options: { ...vitalsChartOptions(), responsive: true, maintainAspectRatio: false } });
+                });
+            });
+
+            setTimeout(function () {
+                const canvas = document.getElementById('symptomsChart'); if (!canvas) return;
+                const existing = Chart.getChart(canvas); if (!existing) return;
+                if (existing.data?.datasets?.[0]) {
+                    const n = (existing.data.labels || []).length || 6;
+                    const palette = [C.deep, C.navy3, C.mid, C.bright, C.mintDk, C.pink];
+                    existing.data.datasets[0].backgroundColor = Array.from({ length: n }, (_, i) => palette[i % palette.length]);
+                    existing.data.datasets[0].borderRadius = 8;
+                    existing.update();
+                }
+            }, 300);
+
+            const _origDoStress = window.doStress;
+            window.doStress = async function () {
+                if (_origDoStress) await _origDoStress();
+                setTimeout(function () { const num = parseFloat(document.getElementById('stress-val').textContent); updateStressCharts(isNaN(num) ? 5 : num); }, 400);
+            };
+
+            
+            
+
+            (function initDashboardRowSelection() {
+                let selectedPatientId = null;
+                function attachRowHandlers() {
+                    const tbody = document.querySelector('#dash-tbl tbody'); if (!tbody) return;
+                    Array.from(tbody.rows).forEach(row => {
+                        row.style.cursor = 'pointer'; row.style.transition = 'background 0.15s';
+                        row.onclick = function () {
+                            Array.from(tbody.rows).forEach(r => r.classList.remove('row-selected'));
+                            row.classList.add('row-selected');
+                            const pid = row.cells[0]?.textContent?.trim();
+                            const pname = row.cells[1]?.textContent?.trim();
+                            if (!pid) return;
+                            selectedPatientId = pid;
+                            const label = document.getElementById('insight-patient-label');
+                            if (label) label.textContent = pname || pid;
+                            window.loadInsightCharts([{ patientid: pid }], null);
+                        };
+                    });
+                }
+                let tries = 0;
+                const interval = setInterval(() => {
+                    tries++;
+                    const rows = document.querySelectorAll('#dash-tbl tbody tr');
+                    if (rows.length > 0) { clearInterval(interval); attachRowHandlers(); rows[0].click(); }
+                    if (tries > 40) clearInterval(interval);
+                }, 150);
+                const observer = new MutationObserver(() => {
+                    attachRowHandlers();
+                    if (!selectedPatientId) { const first = document.querySelector('#dash-tbl tbody tr'); if (first) first.click(); }
+                });
+                const tbody = document.getElementById('dash-tbl');
+                if (tbody) observer.observe(tbody, { childList: true, subtree: true });
+            })();
+        });
+
+        /* ═══ INSIGHT CHARTS ═══ */
+        let taskPriorityChart = null, apptCatChart = null, expCatChart = null;
+
+        const APPT_CATS = ['Consultation', 'Follow-up', 'Medical Test', 'Therapy', 'Emergency'];
+        const APPT_COLS = [C.deep, C.mid, C.bright, C.mintDk, '#ff8fab'];
+        const EXP_CATS = ['Medication', 'Laboratory Tests', 'Procedures & Surgery', 'Hospitalization', 'Emergency'];
+        const EXP_COLS = [C.deep, C.navy3, C.mid, C.bright, C.mintDk];
+
+        window.loadInsightCharts = async function (patients, cid) {
+            if (!patients || !patients.length) return;
+
+            const taskPri = { High: 0, Medium: 0, Low: 0 };
+            const apptCat = Object.fromEntries(APPT_CATS.map(k => [k, 0]));
+            const apptDates = Object.fromEntries(APPT_CATS.map(k => [k, []]));
+            const expCat = Object.fromEntries(EXP_CATS.map(k => [k, 0]));
+
+            await Promise.all(patients.map(async p => {
+                const pid = p.patientid || p.patient_id || p.PatientID;
+                if (!pid) return;
+                try {
+                    const tRes = await fetch(`/api/tasks/${pid}`);
+                    if (tRes.ok) { const tasks = await tRes.json(); tasks.forEach(t => { const pri = (t.task_priority || '').trim(); if (pri in taskPri) taskPri[pri]++; }); }
+                } catch (_) { }
+                try {
+                    const aRes = await fetch(`/api/appointments/${pid}`);
+                    if (aRes.ok) {
+                        const appts = await aRes.json();
+                        appts.forEach(a => {
+                            const cat = (a.appointment_category || '').trim();
+                            if (cat in apptCat) {
+                                apptCat[cat]++;
+                                if (a.appointment_datetime) apptDates[cat].push(a.appointment_datetime);
+                            }
+                        });
+                    }
+                } catch (_) { }
+                try {
+                    const eRes = await fetch(`/api/expenses/${pid}`);
+                    if (eRes.ok) { const data = await eRes.json(); const exps = data.expenses || data || []; exps.forEach(e => { const cat = (e.expense_category || '').trim(); if (cat in expCat) expCat[cat]++; }); }
+                } catch (_) { }
+            }));
+
+            /* Task Priority Donut */
+            const total = taskPri.High + taskPri.Medium + taskPri.Low;
+            document.getElementById('taskTotalCount').textContent = total;
+            if (taskPriorityChart) taskPriorityChart.destroy();
+            taskPriorityChart = new Chart(document.getElementById('taskPriorityDonut'), {
+                type: 'doughnut',
+                data: { labels: ['High', 'Medium', 'Low'], datasets: [{ data: [taskPri.High, taskPri.Medium, taskPri.Low], backgroundColor: [C.deep, C.mid, C.mintDk], borderWidth: 4, borderColor: '#fff', hoverOffset: 10 }] },
+                options: { cutout: '70%', plugins: { legend: { display: false }, tooltip: { ...TT, callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} tasks` } } }, animation: { animateRotate: true, duration: 900 } }
+            });
+
+            /* Appointments — horizontal bar with dates on hover */
+            if (apptCatChart) apptCatChart.destroy();
+            apptCatChart = new Chart(document.getElementById('apptCategoryChart'), {
+                type: 'bar',
+                data: {
+                    labels: APPT_CATS.map(c => c.length > 14 ? c.slice(0, 13) + '…' : c),
+                    datasets: [{ data: APPT_CATS.map(c => apptCat[c]), backgroundColor: APPT_COLS, borderRadius: 7, borderSkipped: false, barPercentage: 0.65 }]
+                },
+                options: {
+                    indexAxis: 'y', responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            ...TT,
+                            callbacks: {
+                                label: ctx => ` ${ctx.raw} appointment${ctx.raw !== 1 ? 's' : ''}`,
+                                afterLabel: ctx => {
+                                    const dates = apptDates[APPT_CATS[ctx.dataIndex]] || [];
+                                    if (!dates.length) return '';
+                                    return dates.slice(0, 5).map(d => '  📅 ' + d).join('\n');
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 10 }, color: C.muted, stepSize: 1, precision: 0, callback: v => Number.isInteger(v) ? v : '' } },
+                        y: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 10 }, color: C.muted } }
+                    }
+                }
+            });
+
+            /* Expenses by Category */
+            if (expCatChart) expCatChart.destroy();
+            expCatChart = new Chart(document.getElementById('expCategoryChart'), {
+                type: 'bar',
+                data: {
+                    labels: EXP_CATS.map(c => c.length > 12 ? c.slice(0, 11) + '…' : c),
+                    datasets: [{ data: EXP_CATS.map(c => expCat[c]), backgroundColor: EXP_COLS, borderRadius: 7, borderSkipped: false, barPercentage: 0.65 }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false }, tooltip: { ...TT, callbacks: { label: ctx => ` ${ctx.raw} expense${ctx.raw !== 1 ? 's' : ''}` } } },
+                    scales: {
+                        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 9 }, color: C.muted } },
+                        y: { grid: { color: 'rgba(35,25,66,0.05)' }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 10 }, color: C.muted, stepSize: 1, precision: 0 } }
+                    }
+                }
+            });
+        };
+
+        /* ═══ STRESS CHARTS ═══ */
+        let stressRadarChart = null, stressBarChart = null;
+
+        function updateStressCharts(level) {
+            const sleep = parseFloat(document.getElementById('s-sleep').value) || 7, quality = parseFloat(document.getElementById('s-qual').value) || 7;
+            const act = parseFloat(document.getElementById('s-act').value) || 50, hr = parseFloat(document.getElementById('s-hr').value) || 72;
+            const steps = parseFloat(document.getElementById('s-steps').value) || 8000;
+            document.getElementById('stress-chart-placeholder').style.display = 'none';
+            document.getElementById('stress-charts-wrap').style.display = 'block';
+            if (stressRadarChart) stressRadarChart.destroy();
+            stressRadarChart = new Chart(document.getElementById('stressRadar'), {
+                type: 'radar',
+                data: { labels: ['Sleep', 'Quality', 'Activity', 'Heart Rate', 'Steps'], datasets: [{ label: 'Patient Metrics', data: [(sleep / 12) * 100, quality * 10, act, Math.max(0, 100 - (hr - 60)), Math.min(100, steps / 100)], backgroundColor: C.brightA, borderColor: C.bright, pointBackgroundColor: [C.deep, C.mid, C.bright, C.mintDk, C.pink], pointBorderColor: '#fff', pointBorderWidth: 2, pointRadius: 6, borderWidth: 2.5 }] },
+                options: { responsive: true, scales: { r: { min: 0, max: 100, ticks: { display: false }, grid: { color: 'rgba(35,25,66,0.08)' }, pointLabels: { font: { family: 'Outfit', size: 12 }, color: C.muted } } }, plugins: { legend: { display: false }, tooltip: { ...TT } } }
+            });
+            const lvl = typeof level === 'number' ? level : 5;
+            if (stressBarChart) stressBarChart.destroy();
+            stressBarChart = new Chart(document.getElementById('stressBar'), {
+                type: 'bar',
+                data: { labels: ['Low (1–3)', 'Moderate (4–6)', 'High (7–10)'], datasets: [{ data: [lvl <= 3 ? lvl : 3, lvl > 3 && lvl <= 6 ? lvl - 3 : (lvl > 6 ? 3 : 0), lvl > 6 ? lvl - 6 : 0], backgroundColor: [C.mintDk, C.mid, C.navy3], borderRadius: 8, borderSkipped: false, barPercentage: 0.6 }] },
+                options: { responsive: true, plugins: { legend: { display: false }, tooltip: { ...TT } }, scales: { x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } }, y: { display: false } } }
+            });
+        }
+
+        /* ═══ COST CHARTS ═══ */
+        let costDonutChart = null, costBarChart = null;
+        function updateCostCharts(predicted) {
+            document.getElementById('cost-chart-placeholder').style.display = 'none';
+            document.getElementById('cost-charts-wrap').style.display = 'block';
+
+            // ── Real factor-based breakdown ───────────────────────────────
+            const isSmoker = document.getElementById('c-smoker').value === 'yes';
+            const bmiVal = parseFloat(document.getElementById('c-bmi').value) || 24.5;
+            const ageVal = parseInt(document.getElementById('c-age').value) || 30;
+
+            // Score each factor 0–1 based on actual input
+            const smokerScore = isSmoker ? 0.35 : 0.05;
+            const bmiScore = bmiVal >= 35 ? 0.22 : bmiVal >= 30 ? 0.16 : bmiVal >= 25 ? 0.10 : 0.05;
+            const ageScore = ageVal >= 60 ? 0.22 : ageVal >= 45 ? 0.15 : ageVal >= 30 ? 0.09 : 0.05;
+            const baseScore = 1 - smokerScore - bmiScore - ageScore;
+
+            const smokerCost = Math.round(predicted * smokerScore);
+            const bmiCost = Math.round(predicted * bmiScore);
+            const ageCost = Math.round(predicted * ageScore);
+            const baseCost = Math.round(predicted * baseScore);
+
+            // ── Donut ─────────────────────────────────────────────────────
+            const donutCanvas = document.getElementById('costDonut');
+            const existingDonut = Chart.getChart(donutCanvas);
+            if (existingDonut) existingDonut.destroy();
+
+            costDonutChart = new Chart(donutCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Base Cost', 'Smoking Risk', 'BMI Risk', 'Age Risk'],
+                    datasets: [{
+                        data: [baseCost, smokerCost, bmiCost, ageCost],
+                        backgroundColor: [C.deep, C.navy3, C.mid, C.mintDk],
+                        borderWidth: 4,
+                        borderColor: '#fff',
+                        hoverOffset: 12
+                    }]
+                },
+                options: {
+                    cutout: '65%',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { font: { family: 'Outfit', size: 11 }, color: C.muted, usePointStyle: true, padding: 16 }
+                        },
+                        tooltip: {
+                            ...TT,
+                            callbacks: {
+                                label: ctx => ` Rs. ${ctx.raw.toLocaleString()}  (${Math.round(ctx.raw / predicted * 100)}%)`
+                            }
+                        }
+                    }
+                }
+            });
+
+            // ── Bar ───────────────────────────────────────────────────────
+            const barCanvas = document.getElementById('costBar');
+            const existingBar = Chart.getChart(barCanvas);
+            if (existingBar) existingBar.destroy();
+
+            costBarChart = new Chart(barCanvas, {
+                type: 'bar',
+                data: {
+                    labels: ['Northeast', 'Northwest', 'Southeast', 'Southwest', 'Your Patient'],
+                    datasets: [{
+                        data: [
+                            Math.round(12000 * 280),
+                            Math.round(10500 * 280),
+                            Math.round(11200 * 280),
+                            Math.round(9800 * 280),
+                            Math.round(predicted)
+                        ],
+                        backgroundColor: [C.pink, C.mintDk, C.mid, C.bright, C.deep],
+                        borderRadius: 8,
+                        borderSkipped: false,
+                        barPercentage: 0.65
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            ...TT,
+                            callbacks: { label: ctx => ' Rs. ' + ctx.raw.toLocaleString() }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            border: { display: false },
+                            ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted }
+                        },
+                        y: {
+                            grid: { color: 'rgba(35,25,66,0.05)' },
+                            border: { display: false },
+                            ticks: {
+                                font: { family: 'Outfit', size: 11 },
+                                color: C.muted,
+                                callback: v => 'Rs.' + (v / 1000).toFixed(0) + 'k'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+    <div id="toast"></div>
+
+</body>
+</html>
