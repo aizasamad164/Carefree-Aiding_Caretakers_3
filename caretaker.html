@@ -966,5 +966,71 @@
     </script>
     <div id="toast"></div>
 
+    <script>
+        function nav(panelId) {
+            // 1. Hide all panels
+            document.querySelectorAll('.panel').forEach(p => {
+                p.classList.remove('active');
+            });
+
+            // 2. Deactivate all sidebar items
+            document.querySelectorAll('.sb-item').forEach(i => {
+                i.classList.remove('active');
+            });
+
+            // 3. Show the target panel
+            const target = document.getElementById('panel-' + panelId);
+            if (target) {
+                target.classList.add('active');
+            }
+
+            // 4. Highlight the clicked sidebar item
+            const activeBtn = document.querySelector(`[data-p="${panelId}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+
+            // 5. Update the Header Title
+            const titles = {
+                'dashboard': 'Dashboard',
+                'patients': 'Patient Management',
+                'patinfo': 'Patient Information',
+                'tasks': 'Task Manager',
+                'appointments': 'Appointments',
+                'expenses': 'Expense Tracker',
+                'vitals': 'Vitals Monitoring',
+                'symptoms': 'Symptom Log',
+                'stress': 'Stress Predictor',
+                'cost': 'Cost Predictor'
+            };
+            
+            const headerTitle = document.getElementById('h-title');
+            if (headerTitle && titles[panelId]) {
+                headerTitle.innerText = titles[panelId];
+            }
+
+            // Auto-close notification panel if switching pages
+            const notif = document.getElementById('notif-panel');
+            if(notif) notif.classList.remove('active');
+        }
+
+        // Logic for the Notification toggle
+        function toggleNotif() {
+            const panel = document.getElementById('notif-panel');
+            const overlay = document.getElementById('notif-overlay');
+            panel.classList.toggle('active');
+            overlay.classList.toggle('active');
+        }
+
+        // Logout function for the demo
+        function logout() {
+            window.location.href = 'index.html';
+        }
+
+        // Simple placeholder for your search to prevent errors
+        function filterPatientsByPrefix(val) {
+            console.log("Searching for:", val);
+        }
+    </script>
 </body>
 </html>
