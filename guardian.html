@@ -10,7 +10,6 @@
 </head>
 <body>
 
-    <!-- ── Sidebar ── -->
     <aside class="sidebar">
         <div class="sb-logo">
             <div class="sb-icon">
@@ -23,17 +22,17 @@
             <div class="sb-urole">Guardian Portal</div>
         </div>
         <nav class="sb-nav">
-            <div class="sb-item active" data-p="info" onclick="nav('info')">        <span class="em">👤</span>Patient Information</div>
+            <div class="sb-item active" data-p="info" onclick="nav('info')"><span class="em">👤</span>Patient Information</div>
             <div class="sb-item" data-p="appointments" onclick="nav('appointments')"><span class="em">📅</span>Appointments</div>
-            <div class="sb-item" data-p="finances" onclick="nav('finances')">    <span class="em">💰</span>Expenses & Finances</div>
-            <div class="sb-item" data-p="query" onclick="nav('query')">       <span class="em">💬</span>Send Query</div>
+            <div class="sb-item" data-p="finances" onclick="nav('finances')"><span class="em">💰</span>Expenses & Finances</div>
+            <div class="sb-item" data-p="query" onclick="nav('query')"><span class="em">💬</span>Send Query</div>
         </nav>
         <div class="sb-footer">
-            <button class="btn-logout" onclick="logout()">← Sign Out</button>
+            <a href="index.html" style="text-decoration: none;">
+                <button class="btn-logout">← Sign Out</button>
+            </a>
         </div>
     </aside>
-
-    <!-- ── Main ── -->
 
     <div class="main">
         <header class="header">
@@ -42,105 +41,102 @@
         </header>
 
         <div class="content">
-
-            <!-- ── Patient Information ── -->
             <div class="panel active" id="panel-info">
                 <div class="card">
-                    <div class="card-hd">
-                        <div class="card-ttl" id="pi-name-hd">Patient Profile</div>
+                    <div class="card-hd"><div class="card-ttl">Patient Profile</div></div>
+                    <div class="info-grid" id="info-grid">
+                        <div class="info-item"><strong>Name:</strong> <span>John Smith</span></div>
+                        <div class="info-item"><strong>Age:</strong> <span>72</span></div>
+                        <div class="info-item"><strong>Condition:</strong> <span>Post-Surgery Recovery</span></div>
                     </div>
-                    <!-- Populated by loadPatInfo() in guardian.js -->
-                    <div class="info-grid" id="info-grid"></div>
                 </div>
             </div>
 
-            <!-- ── Appointments ── -->
             <div class="panel" id="panel-appointments">
                 <div class="pills">
-                    <div class="pill active" onclick="apptF('All',this)">All</div>
-                    <div class="pill" onclick="apptF('Today',this)">Today</div>
-                    <div class="pill" onclick="apptF('Weekly',this)">This Week</div>
-                    <div class="pill" onclick="apptF('Monthly',this)">This Month</div>
+                    <div class="pill active">All</div>
+                    <div class="pill">Today</div>
                 </div>
                 <div class="card">
-                    <div class="card-hd">
-                        <div class="card-ttl">Scheduled Appointments</div>
-                    </div>
+                    <div class="card-hd"><div class="card-ttl">Scheduled Appointments</div></div>
                     <div class="tbl-wrap">
-                        <!-- doctor_name + specialization replace old client_name -->
-                        <!-- status column added -->
-                        <table id="appt-tbl">
+                        <table>
                             <thead>
-                                <tr>
-                                    <th>Doctor</th>
-                                    <th>Category</th>
-                                    <th>Date & Time</th>
-                                    <th>Status</th>
-                                    <th>Description</th>
-                                </tr>
+                                <tr><th>Doctor</th><th>Category</th><th>Date</th><th>Status</th></tr>
                             </thead>
-                            <tbody></tbody>
+                            <tbody>
+                                <tr><td>Dr. Hamza</td><td>Checkup</td><td>2026-05-10</td><td>Confirmed</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- ── Finances ── -->
             <div class="panel" id="panel-finances">
                 <div class="balance-hero">
                     <div class="bal-lbl">Current Balance</div>
-                    <div class="bal-amt" id="bal-amt">Rs. 0.00</div>
-                    
+                    <div class="bal-amt" id="bal-amt">Rs. 5,000.00</div>
                 </div>
-                <div class="card">
-                    <div class="card-hd"><div class="card-ttl">Add Funds</div></div>
-                    <div class="add-funds">
-                        <div>
-                            <label class="lbl">Amount (Rs.)</label>
-                            <input type="number" id="funds-input" placeholder="Enter amount…" min="1" />
-                        </div>
-                        <button class="btn btn-gold" onclick="sendBalance()">Send Balance →</button>
-                    </div>
                 </div>
-                <div class="card">
-                    <div class="card-hd"><div class="card-ttl">Expense History</div></div>
-                    <div class="tbl-wrap">
-                        <table id="exp-tbl">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Category</th>
-                                    <th>Amount</th>
-                                    <th>Date</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
 
-            <!-- ── Send Query ── -->
             <div class="panel" id="panel-query">
                 <div class="card" style="max-width:580px">
-                    <div class="card-hd"><div class="card-ttl">Send a Query to Caretaker</div></div>
-                    <p style="font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6">
-                        Leave a message or query for your patient's caretaker.
-                        They will see it in the patient's profile under "Notes".
-                    </p>
+                    <div class="card-hd"><div class="card-ttl">Send a Query</div></div>
                     <div class="field">
                         <label class="lbl">Your Message</label>
-                        <textarea id="query-txt" rows="6" placeholder="Type your query or message here…"></textarea>
+                        <textarea id="query-txt" rows="6" placeholder="Type your message..."></textarea>
                     </div>
-                    <button class="btn btn-primary" onclick="sendQuery()">Send Query →</button>
+                    <button class="btn btn-primary" onclick="alert('Message Sent!')">Send Query →</button>
                 </div>
             </div>
 
-        </div><!-- /content -->
-    </div><!-- /main -->
+        </div>
+    </div>
 
-    <div id="toast"></div>
+    <script src="static/js/guardian.js"></script>
 
-    <script src="/static/js/guardian.js"></script>
+    <script>
+        function nav(panelId) {
+            // 1. Hide all panels
+            document.querySelectorAll('.panel').forEach(p => {
+                p.classList.remove('active');
+            });
+
+            // 2. Deactivate all sidebar items
+            document.querySelectorAll('.sb-item').forEach(i => {
+                i.classList.remove('active');
+            });
+
+            // 3. Show the target panel
+            const target = document.getElementById('panel-' + panelId);
+            if (target) {
+                target.classList.add('active');
+            }
+
+            // 4. Highlight the clicked sidebar item
+            const activeBtn = document.querySelector(`[data-p="${panelId}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+
+            // 5. Update the Header Title dynamically
+            const titles = {
+                'info': 'Patient Information',
+                'appointments': 'Appointments',
+                'finances': 'Expenses & Finances',
+                'query': 'Send Query'
+            };
+            
+            const headerTitle = document.getElementById('h-title');
+            if (headerTitle && titles[panelId]) {
+                headerTitle.innerText = titles[panelId];
+            }
+        }
+
+        // Simple Logout function for the demo
+        function logout() {
+            window.location.href = 'index.html';
+        }
+    </script>
 </body>
 </html>
