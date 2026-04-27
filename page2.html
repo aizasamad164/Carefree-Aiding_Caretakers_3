@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Carefree — Guardian</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/guardian.css" />
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+</head>
+<body>
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+        <div class="sb-logo">
+            <div class="sb-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z" /></svg>
+            </div>
+            <span class="sb-name">Care<span>free</span></span>
+        </div>
+        <div class="sb-user">
+            <div class="sb-uname" id="sb-name">Guardian</div>
+            <div class="sb-urole">Guardian Portal</div>
+        </div>
+        <nav class="sb-nav">
+            <div class="sb-item active" data-p="info" onclick="nav('info')">        <span class="em">👤</span>Patient Information</div>
+            <div class="sb-item" data-p="appointments" onclick="nav('appointments')"><span class="em">📅</span>Appointments</div>
+            <div class="sb-item" data-p="finances" onclick="nav('finances')">    <span class="em">💰</span>Expenses & Finances</div>
+            <div class="sb-item" data-p="query" onclick="nav('query')">       <span class="em">💬</span>Send Query</div>
+        </nav>
+        <div class="sb-footer">
+            <button class="btn-logout" onclick="logout()">← Sign Out</button>
+        </div>
+    </aside>
+
+    <!-- ── Main ── -->
+
+    <div class="main">
+        <header class="header">
+            <div class="h-title" id="h-title">Patient Information</div>
+            <div class="h-badge" id="h-badge">Guardian View</div>
+        </header>
+
+        <div class="content">
+
+            <!-- ── Patient Information ── -->
+            <div class="panel active" id="panel-info">
+                <div class="card">
+                    <div class="card-hd">
+                        <div class="card-ttl" id="pi-name-hd">Patient Profile</div>
+                    </div>
+                    <!-- Populated by loadPatInfo() in guardian.js -->
+                    <div class="info-grid" id="info-grid"></div>
+                </div>
+            </div>
+
+            <!-- ── Appointments ── -->
+            <div class="panel" id="panel-appointments">
+                <div class="pills">
+                    <div class="pill active" onclick="apptF('All',this)">All</div>
+                    <div class="pill" onclick="apptF('Today',this)">Today</div>
+                    <div class="pill" onclick="apptF('Weekly',this)">This Week</div>
+                    <div class="pill" onclick="apptF('Monthly',this)">This Month</div>
+                </div>
+                <div class="card">
+                    <div class="card-hd">
+                        <div class="card-ttl">Scheduled Appointments</div>
+                    </div>
+                    <div class="tbl-wrap">
+                        <!-- doctor_name + specialization replace old client_name -->
+                        <!-- status column added -->
+                        <table id="appt-tbl">
+                            <thead>
+                                <tr>
+                                    <th>Doctor</th>
+                                    <th>Category</th>
+                                    <th>Date & Time</th>
+                                    <th>Status</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Finances ── -->
+            <div class="panel" id="panel-finances">
+                <div class="balance-hero">
+                    <div class="bal-lbl">Current Balance</div>
+                    <div class="bal-amt" id="bal-amt">Rs. 0.00</div>
+                    
+                </div>
+                <div class="card">
+                    <div class="card-hd"><div class="card-ttl">Add Funds</div></div>
+                    <div class="add-funds">
+                        <div>
+                            <label class="lbl">Amount (Rs.)</label>
+                            <input type="number" id="funds-input" placeholder="Enter amount…" min="1" />
+                        </div>
+                        <button class="btn btn-gold" onclick="sendBalance()">Send Balance →</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-hd"><div class="card-ttl">Expense History</div></div>
+                    <div class="tbl-wrap">
+                        <table id="exp-tbl">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Send Query ── -->
+            <div class="panel" id="panel-query">
+                <div class="card" style="max-width:580px">
+                    <div class="card-hd"><div class="card-ttl">Send a Query to Caretaker</div></div>
+                    <p style="font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6">
+                        Leave a message or query for your patient's caretaker.
+                        They will see it in the patient's profile under "Notes".
+                    </p>
+                    <div class="field">
+                        <label class="lbl">Your Message</label>
+                        <textarea id="query-txt" rows="6" placeholder="Type your query or message here…"></textarea>
+                    </div>
+                    <button class="btn btn-primary" onclick="sendQuery()">Send Query →</button>
+                </div>
+            </div>
+
+        </div><!-- /content -->
+    </div><!-- /main -->
+
+    <div id="toast"></div>
+
+    <script src="/static/js/guardian.js"></script>
+</body>
+</html>
