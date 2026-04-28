@@ -1,4 +1,4 @@
-import random
+import secrets
 import cx_Oracle as oracledb
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db
@@ -17,7 +17,7 @@ def get_or_create_doctor(doctor_name: str, specialization: str, db):
         row = cur.fetchone()
         if row:
             return row[0]
-        did = f"D-{random.randint(10000,99999)}"
+        did = f"D-{secrets.randbelow(90000) + 10000}"
         cur.execute("INSERT INTO Doctor (DoctorID, Doctor_Name, Specialization) VALUES (:1,:2,:3)",
                     (did, doctor_name, specialization))
         return did
@@ -117,7 +117,7 @@ def create_appt(a: ApptCreate, db=Depends(get_db)):
         if doc_row:
             doc_id = doc_row[0]
         else:
-            doc_id = f"D-{random.randint(10000,99999)}"
+            doc_id = f"D-{secrets.randbelow(90000) + 10000}"
             cur.execute("INSERT INTO Doctor (DoctorID, Doctor_Name, Specialization) VALUES (:1,:2,:3)",
                         (doc_id, a.doctor_name.strip(), a.specialization))
 

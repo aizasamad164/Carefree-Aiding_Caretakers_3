@@ -107,8 +107,8 @@ def get_plan(plan_id: str, db=Depends(get_db)):
 @router.post("/api/dietary-plan")
 def create_plan(p: DietaryPlanCreate, db=Depends(get_db)):
     cur = db.cursor()
-    import random
-    plan_id = f"DP-{random.randint(10000,99999)}"
+    import secrets
+    plan_id = f"DP-{secrets.randbelow(90000) + 10000}"
 
     cur.execute("""
         INSERT INTO DietaryPlan (PlanID, Duration, PatientID)

@@ -108,8 +108,8 @@ def get_meal(meal_id: str, db=Depends(get_db)):
 @router.post("/api/meal")
 def create_meal(m: MealCreate, db=Depends(get_db)):
     cur = db.cursor()
-    import random
-    meal_id = f"M-{random.randint(10000,99999)}"
+    import secrets
+    meal_id = f"M-{secrets.randbelow(90000) + 10000}"
 
     cur.execute("""
         INSERT INTO Meal (MealID, Name, Flag, PlanID)

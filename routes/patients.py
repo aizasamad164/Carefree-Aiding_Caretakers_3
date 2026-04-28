@@ -1,4 +1,4 @@
-import random, string
+import secrets, string
 from fastapi import APIRouter, HTTPException, Depends
 from database import get_db, row_to_dict
 from models import PatientCreate, PatientUpdate, CommentBody, BalanceBody
@@ -11,7 +11,7 @@ def gen_id(prefix, table, col, db):
     cur = db.cursor()
     try:
         while True:
-            nid = f"{prefix}-{random.randint(10000,99999)}"
+            nid = f"{prefix}-{rsecrets.randbelow(90000) + 10000}"
             cur.execute(f"SELECT COUNT(*) FROM {table} WHERE {col}=:1", (nid,))
             if cur.fetchone()[0] == 0:
                 return nid
@@ -19,7 +19,7 @@ def gen_id(prefix, table, col, db):
         cur.close()
 
 def gen_pw(n=8):
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=n))
+    return ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(n))
 
 
 # ── Get all patients for a caretaker ──────────────────────────────────────────

@@ -1,4 +1,4 @@
-import random
+import random, secrets
 import string
 from fastapi import APIRouter, Depends, HTTPException
 from database import get_db, row_to_dict
@@ -12,7 +12,7 @@ def gen_id(db):
     cur = db.cursor()
     try:
         while True:
-            cid = f"C-{random.randint(10000,99999)}"
+            cid = f"C-{secrets.randbelow(90000) + 10000}"
             cur.execute("SELECT COUNT(*) FROM Caretaker WHERE CaretakerID=:1", (cid,))
             if cur.fetchone()[0] == 0:
                 return cid
@@ -20,7 +20,7 @@ def gen_id(db):
         cur.close()
 
 def gen_pw(n=8):
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=n))
+    return ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(n))
 
 
 # -- Signup (create caretaker) -------------------------------------------------
