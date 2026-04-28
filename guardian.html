@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <title>Carefree — Guardian</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="static/css/guardian.css" />
-    <link rel="icon" type="image/svg+xml" href="static/favicon.svg">
+    <link rel="stylesheet" href="../static/css/guardian.css" />
+    <link rel="icon" type="image/svg+xml" href="../static/favicon.svg">
 </head>
 <body>
 
@@ -137,6 +137,91 @@
         function logout() {
             window.location.href = 'index.html';
         }
+
+        const PID = sessionStorage.getItem('cf_pid') || 'DEMO-P001';
+        const NAME = sessionStorage.getItem('cf_name') || 'Demo Guardian';
+        const ROLE = sessionStorage.getItem('cf_role') || 'guardian';
+        
+        if (!PID || ROLE !== 'guardian') window.location.href = 'login.html';
+        
+        document.getElementById('sb-name').textContent = NAME || 'Guardian';
+        document.getElementById('h-badge').textContent = NAME || 'Guardian';
+        
+        function toast(msg, type = 'ok') {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = `show ${type}`;
+            clearTimeout(el._t);
+            el._t = setTimeout(() => el.className = '', 3000);
+        }
+        
+        function fdt(s) {
+            if (!s) return '—';
+            try {
+                return new Date(s).toLocaleString('en-PK', { dateStyle: 'medium', timeStyle: 'short' });
+            } catch { return s; }
+        }
+        
+        const titles = {
+            info: 'Patient Information',
+            appointments: 'Appointments',
+            finances: 'Expenses & Finances',
+            query: 'Send Query',
+        };
+        
+        function nav(p) {
+            document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('.sb-item').forEach(x => x.classList.remove('active'));
+            document.getElementById('panel-' + p).classList.add('active');
+            document.querySelector(`[data-p="${p}"]`)?.classList.add('active');
+            document.getElementById('h-title').textContent = titles[p];
+        
+            if (p === 'info') loadPatInfo();
+            if (p === 'appointments') loadAppts('All');
+            if (p === 'finances') loadFinances();
+        }
+        
+        function loadPatInfo() {
+            document.getElementById('pi-name-hd').textContent = NAME + "'s Patient";
+            document.getElementById('info-grid').innerHTML = `
+                <div class="info-item"><div class="info-lbl">Name</div><div class="info-val">Demo Patient</div></div>
+                <div class="info-item"><div class="info-lbl">Age</div><div class="info-val">45</div></div>
+                <div class="info-item"><div class="info-lbl">Gender</div><div class="info-val">Male</div></div>
+                <div class="info-item"><div class="info-lbl">Height</div><div class="info-val">170 cm</div></div>
+                <div class="info-item"><div class="info-lbl">Weight</div><div class="info-val">70 kg</div></div>
+                <div class="info-item"><div class="info-lbl">Region</div><div class="info-val">Northeast</div></div>
+            `;
+            document.getElementById('query-txt').value = '';
+        }
+        
+        function loadAppts(filter) {
+            document.querySelectorAll('.pills .pill').forEach(p => p.classList.remove('active'));
+            const tb = document.querySelector('#appt-tbl tbody');
+            tb.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">📅</div><p>No data in demo mode.</p></div></td></tr>`;
+        }
+        
+        function apptF(f, btn) {
+            document.querySelectorAll('.pills .pill').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            loadAppts(f);
+        }
+        
+        function loadFinances() {
+            document.getElementById('bal-amt').textContent = 'Rs. 0.00';
+            const tb = document.querySelector('#exp-tbl tbody');
+            tb.innerHTML = `<tr><td colspan="4"><div class="empty"><div class="empty-icon">💰</div><p>No data in demo mode.</p></div></td></tr>`;
+        }
+        
+        function sendBalance() { toast('Not available in demo mode', 'err'); }
+        function sendQuery() { toast('Not available in demo mode', 'err'); }
+        
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'login.html';
+        }
+        
+        loadPatInfo();
+        
     </script>
 </body>
 </html>
