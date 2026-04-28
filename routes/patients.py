@@ -11,7 +11,7 @@ def gen_id(prefix, table, col, db):
     cur = db.cursor()
     try:
         while True:
-            nid = f"{prefix}-{rsecrets.randbelow(90000) + 10000}"
+            nid = f"{prefix}-{secrets.randbelow(90000) + 10000}"
             cur.execute(f"SELECT COUNT(*) FROM {table} WHERE {col}=:1", (nid,))
             if cur.fetchone()[0] == 0:
                 return nid
