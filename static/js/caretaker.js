@@ -87,7 +87,7 @@ const titles = {
     vitals: 'Vitals Monitoring',
     symptoms: 'Symptom Tracker',
     stress: 'Stress Level Predictor',
-    cost: 'Insurance Cost Predictor',
+    cost: 'Medical Cost Predictor',
 };
 
 function nav(p) {
