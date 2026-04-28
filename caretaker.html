@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
     <title>Carefree — Caretaker</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="static/css/caretaker.css" />
-    <link rel="icon" type="image/svg+xml" href="static/favicon.svg">
+    <link rel="stylesheet" href="../static/css/caretaker.css" />
+    <link rel="icon" type="image/svg+xml" href="../static/favicon.svg">
 </head>
 <body>
 
@@ -601,16 +601,16 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="/static/js/caretaker.js"></script>
-    <script src="/static/js/notifications.js"></script>
-    <script src="/static/js/dashboard.js"></script>
-    <script src="/static/js/patients.js"></script>
-    <script src="/static/js/tasks.js"></script>
-    <script src="/static/js/appointments.js"></script>
-    <script src="/static/js/expenses.js"></script>
-    <script src="/static/js/vitals.js"></script>
-    <script src="/static/js/symptoms.js"></script>
-    <script src="/static/js/predictions.js"></script>
+    <script src="../static/js/caretaker.js"></script>
+    <script src="../static/js/notifications.js"></script>
+    <script src="../static/js/dashboard.js"></script>
+    <script src="../static/js/patients.js"></script>
+    <script src="../static/js/tasks.js"></script>
+    <script src="../static/js/appointments.js"></script>
+    <script src="../static/js/expenses.js"></script>
+    <script src="../static/js/vitals.js"></script>
+    <script src="../static/js/symptoms.js"></script>
+    <script src="../static/js/predictions.js"></script>
 
     <script>
         const C = {
@@ -1031,6 +1031,187 @@
         function filterPatientsByPrefix(val) {
             console.log("Searching for:", val);
         }
+
+        const CF = {
+            id: sessionStorage.getItem('cf_id') || 'DEMO-001',
+            name: sessionStorage.getItem('cf_name') || 'Demo Caretaker',
+            role: sessionStorage.getItem('cf_role') || 'caretaker',
+        };
+        
+        if (!CF.id || CF.role !== 'caretaker') window.location.href = 'login.html';
+        
+        document.getElementById('sb-name').textContent = CF.name || 'Caretaker';
+        
+        let patients = [];
+        const radio = { gender: '', smoker: '' };
+        const filters = { tasks: 'All', appts: 'All' };
+        let selPatId = null;
+        
+        function toast(msg, type = 'ok') {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = `show ${type}`;
+            clearTimeout(el._t);
+            el._t = setTimeout(() => el.className = '', 3000);
+        }
+        
+        function fdt(s) {
+            if (!s) return '—';
+            try {
+                return new Date(s).toLocaleString('en-PK', { dateStyle: 'medium', timeStyle: 'short' });
+            } catch { return s; }
+        }
+        
+        function toggleSec(id) {
+            document.getElementById(id).classList.toggle('open');
+        }
+        
+        function setPillFilter(type, val, el) {
+            el.closest('.pills').querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+            el.classList.add('active');
+            filters[type] = val;
+            if (type === 'tasks') loadTasks();
+            if (type === 'appts') loadAppts();
+        }
+        
+        function fillPatSelects(list) {
+            ['pi-sel','t-patsel','a-patsel','e-patsel','c-patsel','v-patsel','vf-patsel','sym-patsel'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const first = el.options[0].outerHTML;
+                el.innerHTML = first + list.map(p =>
+                    `<option value="${p.patient_id}">${p.patient_name}</option>`
+                ).join('');
+            });
+        }
+        
+        const titles = {
+            dashboard: 'Dashboard', patients: 'Patient Management',
+            patinfo: 'Patient Information', tasks: 'Task Manager',
+            appointments: 'Appointments', expenses: 'Expense Tracker',
+            vitals: 'Vitals Monitoring', symptoms: 'Symptom Tracker',
+            stress: 'Stress Level Predictor', cost: 'Medical Cost Predictor',
+        };
+        
+        function nav(p) {
+            document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+            document.querySelectorAll('.sb-item').forEach(x => x.classList.remove('active'));
+            document.getElementById('panel-' + p).classList.add('active');
+            document.querySelector(`[data-p="${p}"]`)?.classList.add('active');
+            document.getElementById('h-title').textContent = titles[p] || p;
+        
+            if (p === 'dashboard') loadDash();
+            if (p === 'patients') loadPats();
+            if (p === 'patinfo') loadPatInfo();
+            if (p === 'tasks') { document.getElementById('t-patsel').value = ''; loadTasks(); }
+            if (p === 'appointments') { document.getElementById('a-patsel').value = ''; loadAppts(); }
+            if (p === 'expenses') { document.getElementById('e-patsel').value = ''; loadExps(); }
+            if (p === 'vitals') { document.getElementById('v-patsel').value = ''; loadVitals(); }
+            if (p === 'symptoms') { document.getElementById('sym-patsel').value = ''; loadSymptoms(); }
+            if (p === 'stress') {
+                ['s-sleep','s-qual','s-act','s-hr','s-steps','s-sys','s-dia'].forEach(id => {
+                    document.getElementById(id).value = '';
+                });
+                document.getElementById('stress-val').textContent = '';
+                document.getElementById('stress-box').classList.remove('show');
+            }
+            if (p === 'cost') {
+                ['c-age','c-bmi','c-children'].forEach(id => document.getElementById(id).value = '');
+                document.getElementById('c-sex').value = 'male';
+                document.getElementById('c-smoker').value = 'no';
+                document.getElementById('c-region').value = 'northeast';
+                document.getElementById('cost-val').textContent = '';
+                document.getElementById('cost-box').classList.remove('show');
+            }
+        }
+        
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'login.html';
+        }
+        
+        // ── Stub functions so panels don't crash ──────────────────────────────────────
+        function loadDash() {
+            document.getElementById('st-pats').textContent = '0';
+            document.getElementById('st-tasks').textContent = '0';
+            document.getElementById('st-appts').textContent = '0';
+            document.getElementById('st-exps').textContent = '0';
+            const tb = document.querySelector('#dash-tbl tbody');
+            if (tb) tb.innerHTML = `<tr><td colspan="4"><div class="empty"><div class="empty-icon">👥</div><p>No data in demo mode.</p></div></td></tr>`;
+        }
+        
+        function loadPats() {
+            patients = [];
+            const tb = document.querySelector('#pat-tbl tbody');
+            if (tb) tb.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">👥</div><p>No data in demo mode.</p></div></td></tr>`;
+            fillPatSelects([]);
+        }
+        
+        function loadPatInfo() { loadPats(); }
+        function loadTasks() {
+            const tb = document.querySelector('#task-tbl tbody');
+            if (tb) tb.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">✅</div><p>No data in demo mode.</p></div></td></tr>`;
+        }
+        function loadAppts() {
+            const tb = document.querySelector('#appt-tbl tbody');
+            if (tb) tb.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">📅</div><p>No data in demo mode.</p></div></td></tr>`;
+        }
+        function loadExps() {
+            const tb = document.querySelector('#exp-tbl tbody');
+            if (tb) tb.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">💰</div><p>No data in demo mode.</p></div></td></tr>`;
+        }
+        function loadVitals() {
+            const tb = document.querySelector('#vitals-tbl tbody');
+            if (tb) tb.innerHTML = `<tr><td colspan="6"><div class="empty"><div class="empty-icon">❤️</div><p>No data in demo mode.</p></div></td></tr>`;
+        }
+        function loadSymptoms() {
+            const el = document.getElementById('sym-list');
+            if (el) el.innerHTML = `<div class="empty"><div class="empty-icon">🩺</div><p>No data in demo mode.</p></div>`;
+        }
+        function loadNotifs() {}
+        function toggleNotif() {
+            document.getElementById('notif-panel').classList.toggle('open');
+            document.getElementById('notif-overlay').classList.toggle('open');
+        }
+        function filterPatientsByPrefix() {}
+        function loadDoctorsForDropdown() {}
+        function onDoctorSelect() {}
+        function selPat() {}
+        function openAddPat() { nav('patinfo'); }
+        function removeSelectedPat() { toast('Not available in demo mode', 'err'); }
+        function loadPatIntoForm() {}
+        function clearPatForm() {}
+        function setR(field, val, el) {
+            radio[field] = val;
+            el.closest('.rtog').querySelectorAll('.rtog-opt').forEach(o => o.classList.remove('sel'));
+            el.classList.add('sel');
+        }
+        function savePat() { toast('Not available in demo mode', 'err'); }
+        function showGuardianPassword() { toast('Not available in demo mode', 'err'); }
+        function addTask() { toast('Not available in demo mode', 'err'); }
+        function delTask() { toast('Not available in demo mode', 'err'); }
+        function addAppt() { toast('Not available in demo mode', 'err'); }
+        function delAppt() { toast('Not available in demo mode', 'err'); }
+        function addExp() { toast('Not available in demo mode', 'err'); }
+        function delExp() { toast('Not available in demo mode', 'err'); }
+        function openVitalsForm() { toast('Not available in demo mode', 'err'); }
+        function saveVitals() { toast('Not available in demo mode', 'err'); }
+        function delVitals() { toast('Not available in demo mode', 'err'); }
+        function toggleSymptomForm() { toast('Not available in demo mode', 'err'); }
+        function addPredefinedSymptom() { toast('Not available in demo mode', 'err'); }
+        function addCustomSymptom() { toast('Not available in demo mode', 'err'); }
+        function delPredefinedSymptom() { toast('Not available in demo mode', 'err'); }
+        function delCustomSymptom() { toast('Not available in demo mode', 'err'); }
+        function addNotif() { toast('Not available in demo mode', 'err'); }
+        function dismissNotif() {}
+        function handleCostModeChange() {}
+        function fillCostFromPat() {}
+        function predictCostFromPatInfo() { toast('Not available in demo mode', 'err'); }
+        
+        document.addEventListener('DOMContentLoaded', function () {
+            loadDash();
+        });
+        
     </script>
 </body>
 </html>
