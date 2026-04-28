@@ -140,6 +140,101 @@
         </div>
     </div>
 
+    let currentRole = '';
+
+    function show(id) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+    
+    function pickRole(role, el) {
+        currentRole = role;
+        document.querySelectorAll('.role-card').forEach(c => c.classList.remove('sel'));
+        el.classList.add('sel');
+    
+        if (role === 'caretaker') {
+            document.getElementById('si-title').textContent = 'Caretaker Sign In';
+            document.getElementById('si-sub').textContent = 'Access your patient dashboard';
+            document.getElementById('si-user-label').textContent = 'Username';
+            document.getElementById('si-user').placeholder = 'Your caretaker name';
+            document.getElementById('si-signup-link').style.display = 'block';
+        } else {
+            document.getElementById('si-title').textContent = 'Guardian Sign In';
+            document.getElementById('si-sub').textContent = 'Enter your guardian name and password';
+            document.getElementById('si-user-label').textContent = 'Guardian Name';
+            document.getElementById('si-user').placeholder = 'Your guardian name';
+            document.getElementById('si-signup-link').style.display = 'none';
+        }
+        setTimeout(() => show('v-signin'), 120);
+    }
+    
+    async function doSignIn() {
+        const u = document.getElementById('si-user').value.trim();
+        const p = document.getElementById('si-pass').value.trim();
+        const err = document.getElementById('si-err');
+        err.classList.remove('show');
+    
+        if (!u || !p) { err.textContent = 'Please fill in all fields.'; err.classList.add('show'); return; }
+        if (!currentRole) { err.textContent = 'Please select a role first.'; err.classList.add('show'); return; }
+    
+        if (currentRole === 'caretaker') {
+            sessionStorage.setItem('cf_role', 'caretaker');
+            sessionStorage.setItem('cf_id', 'DEMO-001');
+            sessionStorage.setItem('cf_name', u);
+            window.location.href = 'caretaker.html';
+        } else {
+            sessionStorage.setItem('cf_role', 'guardian');
+            sessionStorage.setItem('cf_pid', 'DEMO-P001');
+            sessionStorage.setItem('cf_name', u);
+            window.location.href = 'guardian.html';
+        }
+    }
+    
+    async function doSignUp() {
+        const err = document.getElementById('su-err');
+        const ok = document.getElementById('su-ok');
+        err.classList.remove('show');
+        ok.classList.remove('show');
+    
+        const name = document.getElementById('su-name').value.trim();
+        const age = document.getElementById('su-age').value;
+        const gen = document.getElementById('su-gender').value;
+        const con = document.getElementById('su-contact').value.trim();
+        const exp = document.getElementById('su-exp').value;
+        const qual = document.getElementById('su-qual').value.trim();
+        const skiRaw = document.getElementById('su-skills').value.trim();
+    
+        if (!name || !age || !gen || !con || !exp || !qual || !skiRaw) {
+            err.textContent = 'Please fill in all fields.';
+            err.classList.add('show');
+            return;
+        }
+    
+        ok.innerHTML = `
+            <strong>✓ Account Created! (Demo Mode)</strong>
+            <div class="cred-box">
+                Username: <b>${name}</b><br>
+                Password: <b>demo1234</b>
+                <small>⚠ This is demo mode — no data is saved.</small>
+            </div>`;
+        ok.classList.add('show');
+    
+        ['su-name','su-age','su-gender','su-contact','su-exp','su-qual','su-skills']
+            .forEach(id => { document.getElementById(id).value = ''; });
+    }
+    
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Enter') return;
+        const a = document.querySelector('.view.active');
+        if (a.id === 'v-signin') doSignIn();
+        if (a.id === 'v-signup') doSignUp();
+    });
+    
     <script src="static/js/login.js"></script>
 </body>
 </html>
+
+
+
+
+
