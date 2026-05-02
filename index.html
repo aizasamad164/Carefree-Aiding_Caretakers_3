@@ -42,28 +42,27 @@
 
         <div class="card-body">
 
+            <!-- VIEW: Role Selection -->
             <div class="view active" id="v-role">
                 <div class="view-title">Welcome back</div>
                 <div class="view-sub">Select your role to continue</div>
                 <div class="roles">
-                    <a href="caretaker.html" style="text-decoration: none; color: inherit; display: block;">
-                        <div class="role-card">
-                            <span class="role-icon">🩺</span>
-                            <div class="role-label">Caretaker</div>
-                            <div class="role-desc">Manage patients & tasks</div>
-                        </div>
-                    </a>
-                    
-                    <a href="guardian.html" style="text-decoration: none; color: inherit; display: block;">
-                        <div class="role-card">
-                            <span class="role-icon">👨‍👩‍👧</span>
-                            <div class="role-label">Guardian</div>
-                            <div class="role-desc">View patient updates</div>
-                        </div>
-                    </a>
+                    <!-- FIX: Use onclick="pickRole()" instead of bare <a href> so sign-in flow is not bypassed -->
+                    <div class="role-card" onclick="pickRole('caretaker', this)">
+                        <span class="role-icon">🩺</span>
+                        <div class="role-label">Caretaker</div>
+                        <div class="role-desc">Manage patients &amp; tasks</div>
+                    </div>
+
+                    <div class="role-card" onclick="pickRole('guardian', this)">
+                        <span class="role-icon">👨‍👩‍👧</span>
+                        <div class="role-label">Guardian</div>
+                        <div class="role-desc">View patient updates</div>
+                    </div>
                 </div>
             </div>
 
+            <!-- VIEW: Sign In -->
             <div class="view" id="v-signin">
                 <div class="view-title" id="si-title">Sign In</div>
                 <div class="view-sub" id="si-sub">Enter your credentials</div>
@@ -76,7 +75,8 @@
                     <label>Password</label>
                     <input id="si-pass" type="password" placeholder="••••••••" autocomplete="current-password" />
                 </div>
-                <button class="btn btn-primary" onclick="window.location.href='caretaker.html'">Sign In</button>
+                <!-- FIX: Call doSignIn() instead of hardcoded href -->
+                <button class="btn btn-primary" onclick="doSignIn()">Sign In</button>
 
                 <div id="si-signup-link" style="display:none">
                     <div class="or-row"><hr /><span>New caretaker?</span><hr /></div>
@@ -86,6 +86,7 @@
                 <div class="back-link"><a onclick="show('v-role')">← Change role</a></div>
             </div>
 
+            <!-- VIEW: Sign Up -->
             <div class="view" id="v-signup">
                 <div class="view-title">Create Account</div>
                 <div class="view-sub">Register as a new caretaker</div>
@@ -140,102 +141,99 @@
         </div>
     </div>
 
-    let currentRole = '';
+    <!-- FIX: All JavaScript is now correctly inside a <script> tag -->
+    <script>
+        let currentRole = '';
 
-    function show(id) {
-        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-    }
-    
-    function pickRole(role, el) {
-        currentRole = role;
-        document.querySelectorAll('.role-card').forEach(c => c.classList.remove('sel'));
-        el.classList.add('sel');
-    
-        if (role === 'caretaker') {
-            document.getElementById('si-title').textContent = 'Caretaker Sign In';
-            document.getElementById('si-sub').textContent = 'Access your patient dashboard';
-            document.getElementById('si-user-label').textContent = 'Username';
-            document.getElementById('si-user').placeholder = 'Your caretaker name';
-            document.getElementById('si-signup-link').style.display = 'block';
-        } else {
-            document.getElementById('si-title').textContent = 'Guardian Sign In';
-            document.getElementById('si-sub').textContent = 'Enter your guardian name and password';
-            document.getElementById('si-user-label').textContent = 'Guardian Name';
-            document.getElementById('si-user').placeholder = 'Your guardian name';
-            document.getElementById('si-signup-link').style.display = 'none';
+        function show(id) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
         }
-        setTimeout(() => show('v-signin'), 120);
-    }
-    
-    async function doSignIn() {
-        const u = document.getElementById('si-user').value.trim();
-        const p = document.getElementById('si-pass').value.trim();
-        const err = document.getElementById('si-err');
-        err.classList.remove('show');
-    
-        if (!u || !p) { err.textContent = 'Please fill in all fields.'; err.classList.add('show'); return; }
-        if (!currentRole) { err.textContent = 'Please select a role first.'; err.classList.add('show'); return; }
-    
-        if (currentRole === 'caretaker') {
-            sessionStorage.setItem('cf_role', 'caretaker');
-            sessionStorage.setItem('cf_id', 'DEMO-001');
-            sessionStorage.setItem('cf_name', u);
-            window.location.href = 'caretaker.html';
-        } else {
-            sessionStorage.setItem('cf_role', 'guardian');
-            sessionStorage.setItem('cf_pid', 'DEMO-P001');
-            sessionStorage.setItem('cf_name', u);
-            window.location.href = 'guardian.html';
+
+        function pickRole(role, el) {
+            currentRole = role;
+            document.querySelectorAll('.role-card').forEach(c => c.classList.remove('sel'));
+            el.classList.add('sel');
+
+            if (role === 'caretaker') {
+                document.getElementById('si-title').textContent = 'Caretaker Sign In';
+                document.getElementById('si-sub').textContent = 'Access your patient dashboard';
+                document.getElementById('si-user-label').textContent = 'Username';
+                document.getElementById('si-user').placeholder = 'Your caretaker name';
+                document.getElementById('si-signup-link').style.display = 'block';
+            } else {
+                document.getElementById('si-title').textContent = 'Guardian Sign In';
+                document.getElementById('si-sub').textContent = 'Enter your guardian name and password';
+                document.getElementById('si-user-label').textContent = 'Guardian Name';
+                document.getElementById('si-user').placeholder = 'Your guardian name';
+                document.getElementById('si-signup-link').style.display = 'none';
+            }
+            setTimeout(() => show('v-signin'), 120);
         }
-    }
-    
-    async function doSignUp() {
-        const err = document.getElementById('su-err');
-        const ok = document.getElementById('su-ok');
-        err.classList.remove('show');
-        ok.classList.remove('show');
-    
-        const name = document.getElementById('su-name').value.trim();
-        const age = document.getElementById('su-age').value;
-        const gen = document.getElementById('su-gender').value;
-        const con = document.getElementById('su-contact').value.trim();
-        const exp = document.getElementById('su-exp').value;
-        const qual = document.getElementById('su-qual').value.trim();
-        const skiRaw = document.getElementById('su-skills').value.trim();
-    
-        if (!name || !age || !gen || !con || !exp || !qual || !skiRaw) {
-            err.textContent = 'Please fill in all fields.';
-            err.classList.add('show');
-            return;
+
+        async function doSignIn() {
+            const u = document.getElementById('si-user').value.trim();
+            const p = document.getElementById('si-pass').value.trim();
+            const err = document.getElementById('si-err');
+            err.classList.remove('show');
+
+            if (!u || !p) { err.textContent = 'Please fill in all fields.'; err.classList.add('show'); return; }
+            if (!currentRole) { err.textContent = 'Please select a role first.'; err.classList.add('show'); return; }
+
+            if (currentRole === 'caretaker') {
+                sessionStorage.setItem('cf_role', 'caretaker');
+                sessionStorage.setItem('cf_id', 'DEMO-001');
+                sessionStorage.setItem('cf_name', u);
+                window.location.href = 'caretaker.html';
+            } else {
+                sessionStorage.setItem('cf_role', 'guardian');
+                sessionStorage.setItem('cf_pid', 'DEMO-P001');
+                sessionStorage.setItem('cf_name', u);
+                window.location.href = 'guardian.html';
+            }
         }
-    
-        ok.innerHTML = `
-            <strong>✓ Account Created! (Demo Mode)</strong>
-            <div class="cred-box">
-                Username: <b>${name}</b><br>
-                Password: <b>demo1234</b>
-                <small>⚠ This is demo mode — no data is saved.</small>
-            </div>`;
-        ok.classList.add('show');
-    
-        ['su-name','su-age','su-gender','su-contact','su-exp','su-qual','su-skills']
-            .forEach(id => { document.getElementById(id).value = ''; });
-    }
-    
-    document.addEventListener('keydown', e => {
-        if (e.key !== 'Enter') return;
-        const a = document.querySelector('.view.active');
-        if (a.id === 'v-signin') doSignIn();
-        if (a.id === 'v-signup') doSignUp();
-    });
+
+        async function doSignUp() {
+            const err = document.getElementById('su-err');
+            const ok = document.getElementById('su-ok');
+            err.classList.remove('show');
+            ok.classList.remove('show');
+
+            const name = document.getElementById('su-name').value.trim();
+            const age = document.getElementById('su-age').value;
+            const gen = document.getElementById('su-gender').value;
+            const con = document.getElementById('su-contact').value.trim();
+            const exp = document.getElementById('su-exp').value;
+            const qual = document.getElementById('su-qual').value.trim();
+            const skiRaw = document.getElementById('su-skills').value.trim();
+
+            if (!name || !age || !gen || !con || !exp || !qual || !skiRaw) {
+                err.textContent = 'Please fill in all fields.';
+                err.classList.add('show');
+                return;
+            }
+
+            ok.innerHTML = `
+                <strong>✓ Account Created! (Demo Mode)</strong>
+                <div class="cred-box">
+                    Username: <b>${name}</b><br>
+                    Password: <b>demo1234</b>
+                    <small>⚠ This is demo mode — no data is saved.</small>
+                </div>`;
+            ok.classList.add('show');
+
+            ['su-name','su-age','su-gender','su-contact','su-exp','su-qual','su-skills']
+                .forEach(id => { document.getElementById(id).value = ''; });
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key !== 'Enter') return;
+            const a = document.querySelector('.view.active');
+            if (a.id === 'v-signin') doSignIn();
+            if (a.id === 'v-signup') doSignUp();
+        });
     </script>
-    
+
     <script src="static/js/login.js"></script>
 </body>
 </html>
-
-
-
-
-
