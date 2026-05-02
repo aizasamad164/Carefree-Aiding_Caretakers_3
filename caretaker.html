@@ -236,7 +236,8 @@
                     <div id="pi-pw-section" style="margin-top:18px;padding-top:18px;border-top:1px solid var(--cream3);display:block;">
                         <div style="display:flex;align-items:center;justify-content:space-between">
                             <div style="font-size:13px;font-weight:600">Guardian Access</div>
-                            <button id="show-pw-btn" type="button" class="btn btn-primary btn-sm">🔑 Show Password</button>
+                            <!-- FIX: Added onclick to show-pw-btn -->
+                            <button id="show-pw-btn" type="button" class="btn btn-primary btn-sm" onclick="showGuardianPassword()">🔑 Show Password</button>
                         </div>
                     </div>
                     <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--cream3)">
@@ -269,7 +270,7 @@
                     <div style="font-size:13px;font-weight:600;margin-bottom:14px">New Task</div>
                     <div class="form-grid">
                         <div class="field"><label class="lbl">Task Name</label><input id="tf-name" placeholder="e.g. Morning Medication" /></div>
-                        <div class="field"><label class="lbl">Date & Time</label><input id="tf-time" type="datetime-local" /></div>
+                        <div class="field"><label class="lbl">Date &amp; Time</label><input id="tf-time" type="datetime-local" /></div>
                         <div class="field">
                             <label class="lbl">Frequency</label>
                             <select id="tf-freq">
@@ -297,7 +298,7 @@
                 <div class="card">
                     <div class="tbl-wrap">
                         <table id="task-tbl">
-                            <thead><tr><th>Task</th><th>Date & Time</th><th>Frequency</th><th>Priority</th><th>Description</th><th></th></tr></thead>
+                            <thead><tr><th>Task</th><th>Date &amp; Time</th><th>Frequency</th><th>Priority</th><th>Description</th><th></th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -326,7 +327,7 @@
                         </div>
                         <div class="field"><label class="lbl">Doctor Name</label><input id="af-doctor" placeholder="Dr. full name" /></div>
                         <div class="field"><label class="lbl">Specialization</label><input id="af-spec" placeholder="e.g. Cardiologist" /></div>
-                        <div class="field"><label class="lbl">Date & Time</label><input id="af-time" type="datetime-local" /></div>
+                        <div class="field"><label class="lbl">Date &amp; Time</label><input id="af-time" type="datetime-local" /></div>
                         <div class="field">
                             <label class="lbl">Category</label>
                             <select id="af-cat">
@@ -347,7 +348,7 @@
                 <div class="card">
                     <div class="tbl-wrap">
                         <table id="appt-tbl">
-                            <thead><tr><th>Doctor</th><th>Category</th><th>Date & Time</th><th>Status</th><th>Description</th><th></th></tr></thead>
+                            <thead><tr><th>Doctor</th><th>Category</th><th>Date &amp; Time</th><th>Status</th><th>Description</th><th></th></tr></thead>
                             <tbody></tbody>
                         </table>
                     </div>
@@ -371,7 +372,7 @@
                             <select id="ef-cat">
                                 <option>Medication</option>
                                 <option>Laboratory Tests</option>
-                                <option>Procedures & Surgery</option>
+                                <option>Procedures &amp; Surgery</option>
                                 <option>Hospitalization</option>
                                 <option>Emergency</option>
                             </select>
@@ -600,6 +601,9 @@
         </div>
     </div>
 
+    <!-- Toast element (was missing from original) -->
+    <div id="toast"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../static/js/caretaker.js"></script>
     <script src="../static/js/notifications.js"></script>
@@ -613,6 +617,7 @@
     <script src="../static/js/predictions.js"></script>
 
     <script>
+        /* ── Chart colour palette ── */
         const C = {
             deep: '#231942', navy2: '#3d1f5e', navy3: '#5e2a7a',
             mid: '#b96ac9', bright: '#e980fc', pink: '#ffd2fc',
@@ -659,7 +664,6 @@
         };
 
         document.addEventListener('DOMContentLoaded', function () {
-
             requestAnimationFrame(() => {
                 ['vitalsChart', 'dashVitalsChart'].forEach(id => {
                     const canvas = document.getElementById(id); if (!canvas) return;
@@ -686,9 +690,6 @@
                 if (_origDoStress) await _origDoStress();
                 setTimeout(function () { const num = parseFloat(document.getElementById('stress-val').textContent); updateStressCharts(isNaN(num) ? 5 : num); }, 400);
             };
-
-            
-            
 
             (function initDashboardRowSelection() {
                 let selectedPatientId = null;
@@ -857,12 +858,10 @@
             document.getElementById('cost-chart-placeholder').style.display = 'none';
             document.getElementById('cost-charts-wrap').style.display = 'block';
 
-            // ── Real factor-based breakdown ───────────────────────────────
             const isSmoker = document.getElementById('c-smoker').value === 'yes';
             const bmiVal = parseFloat(document.getElementById('c-bmi').value) || 24.5;
             const ageVal = parseInt(document.getElementById('c-age').value) || 30;
 
-            // Score each factor 0–1 based on actual input
             const smokerScore = isSmoker ? 0.35 : 0.05;
             const bmiScore = bmiVal >= 35 ? 0.22 : bmiVal >= 30 ? 0.16 : bmiVal >= 25 ? 0.10 : 0.05;
             const ageScore = ageVal >= 60 ? 0.22 : ageVal >= 45 ? 0.15 : ageVal >= 30 ? 0.09 : 0.05;
@@ -873,7 +872,6 @@
             const ageCost = Math.round(predicted * ageScore);
             const baseCost = Math.round(predicted * baseScore);
 
-            // ── Donut ─────────────────────────────────────────────────────
             const donutCanvas = document.getElementById('costDonut');
             const existingDonut = Chart.getChart(donutCanvas);
             if (existingDonut) existingDonut.destroy();
@@ -885,32 +883,18 @@
                     datasets: [{
                         data: [baseCost, smokerCost, bmiCost, ageCost],
                         backgroundColor: [C.deep, C.navy3, C.mid, C.mintDk],
-                        borderWidth: 4,
-                        borderColor: '#fff',
-                        hoverOffset: 12
+                        borderWidth: 4, borderColor: '#fff', hoverOffset: 12
                     }]
                 },
                 options: {
-                    cutout: '65%',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: false,
+                    cutout: '65%', responsive: true, maintainAspectRatio: false, animation: false,
                     plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { font: { family: 'Outfit', size: 11 }, color: C.muted, usePointStyle: true, padding: 16 }
-                        },
-                        tooltip: {
-                            ...TT,
-                            callbacks: {
-                                label: ctx => ` Rs. ${ctx.raw.toLocaleString()}  (${Math.round(ctx.raw / predicted * 100)}%)`
-                            }
-                        }
+                        legend: { position: 'bottom', labels: { font: { family: 'Outfit', size: 11 }, color: C.muted, usePointStyle: true, padding: 16 } },
+                        tooltip: { ...TT, callbacks: { label: ctx => ` Rs. ${ctx.raw.toLocaleString()}  (${Math.round(ctx.raw / predicted * 100)}%)` } }
                     }
                 }
             });
 
-            // ── Bar ───────────────────────────────────────────────────────
             const barCanvas = document.getElementById('costBar');
             const existingBar = Chart.getChart(barCanvas);
             if (existingBar) existingBar.destroy();
@@ -920,152 +904,67 @@
                 data: {
                     labels: ['Northeast', 'Northwest', 'Southeast', 'Southwest', 'Your Patient'],
                     datasets: [{
-                        data: [
-                            Math.round(12000 * 280),
-                            Math.round(10500 * 280),
-                            Math.round(11200 * 280),
-                            Math.round(9800 * 280),
-                            Math.round(predicted)
-                        ],
+                        data: [Math.round(12000 * 280), Math.round(10500 * 280), Math.round(11200 * 280), Math.round(9800 * 280), Math.round(predicted)],
                         backgroundColor: [C.pink, C.mintDk, C.mid, C.bright, C.deep],
-                        borderRadius: 8,
-                        borderSkipped: false,
-                        barPercentage: 0.65
+                        borderRadius: 8, borderSkipped: false, barPercentage: 0.65
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: false,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            ...TT,
-                            callbacks: { label: ctx => ' Rs. ' + ctx.raw.toLocaleString() }
-                        }
-                    },
+                    responsive: true, maintainAspectRatio: false, animation: false,
+                    plugins: { legend: { display: false }, tooltip: { ...TT, callbacks: { label: ctx => ' Rs. ' + ctx.raw.toLocaleString() } } },
                     scales: {
-                        x: {
-                            grid: { display: false },
-                            border: { display: false },
-                            ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted }
-                        },
-                        y: {
-                            grid: { color: 'rgba(35,25,66,0.05)' },
-                            border: { display: false },
-                            ticks: {
-                                font: { family: 'Outfit', size: 11 },
-                                color: C.muted,
-                                callback: v => 'Rs.' + (v / 1000).toFixed(0) + 'k'
-                            }
-                        }
+                        x: { grid: { display: false }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted } },
+                        y: { grid: { color: 'rgba(35,25,66,0.05)' }, border: { display: false }, ticks: { font: { family: 'Outfit', size: 11 }, color: C.muted, callback: v => 'Rs.' + (v / 1000).toFixed(0) + 'k' } }
                     }
                 }
             });
         }
-    </script>
-    <div id="toast"></div>
 
-    <script>
-        function nav(panelId) {
-            // 1. Hide all panels
-            document.querySelectorAll('.panel').forEach(p => {
-                p.classList.remove('active');
-            });
-
-            // 2. Deactivate all sidebar items
-            document.querySelectorAll('.sb-item').forEach(i => {
-                i.classList.remove('active');
-            });
-
-            // 3. Show the target panel
-            const target = document.getElementById('panel-' + panelId);
-            if (target) {
-                target.classList.add('active');
-            }
-
-            // 4. Highlight the clicked sidebar item
-            const activeBtn = document.querySelector(`[data-p="${panelId}"]`);
-            if (activeBtn) {
-                activeBtn.classList.add('active');
-            }
-
-            // 5. Update the Header Title
-            const titles = {
-                'dashboard': 'Dashboard',
-                'patients': 'Patient Management',
-                'patinfo': 'Patient Information',
-                'tasks': 'Task Manager',
-                'appointments': 'Appointments',
-                'expenses': 'Expense Tracker',
-                'vitals': 'Vitals Monitoring',
-                'symptoms': 'Symptom Log',
-                'stress': 'Stress Predictor',
-                'cost': 'Cost Predictor'
-            };
-            
-            const headerTitle = document.getElementById('h-title');
-            if (headerTitle && titles[panelId]) {
-                headerTitle.innerText = titles[panelId];
-            }
-
-            // Auto-close notification panel if switching pages
-            const notif = document.getElementById('notif-panel');
-            if(notif) notif.classList.remove('active');
-        }
-
-        // Logic for the Notification toggle
-        function toggleNotif() {
-            const panel = document.getElementById('notif-panel');
-            const overlay = document.getElementById('notif-overlay');
-            panel.classList.toggle('active');
-            overlay.classList.toggle('active');
-        }
-
-        // Logout function for the demo
-        function logout() {
-            window.location.href = 'index.html';
-        }
-
-        // Simple placeholder for your search to prevent errors
-        function filterPatientsByPrefix(val) {
-            console.log("Searching for:", val);
-        }
+        /* ══════════════════════════════════════════════════════
+           CORE APP — single definition of each function
+           (FIX: removed all duplicate function declarations)
+        ══════════════════════════════════════════════════════ */
 
         const CF = {
             id: sessionStorage.getItem('cf_id') || 'DEMO-001',
             name: sessionStorage.getItem('cf_name') || 'Demo Caretaker',
             role: sessionStorage.getItem('cf_role') || 'caretaker',
         };
-        
+
         if (!CF.id || CF.role !== 'caretaker') window.location.href = 'login.html';
-        
+
         document.getElementById('sb-name').textContent = CF.name || 'Caretaker';
-        
+
         let patients = [];
         const radio = { gender: '', smoker: '' };
         const filters = { tasks: 'All', appts: 'All' };
         let selPatId = null;
-        
+
         function toast(msg, type = 'ok') {
             const el = document.getElementById('toast');
+            if (!el) return;
             el.textContent = msg;
             el.className = `show ${type}`;
             clearTimeout(el._t);
             el._t = setTimeout(() => el.className = '', 3000);
         }
-        
+
         function fdt(s) {
             if (!s) return '—';
-            try {
-                return new Date(s).toLocaleString('en-PK', { dateStyle: 'medium', timeStyle: 'short' });
-            } catch { return s; }
+            try { return new Date(s).toLocaleString('en-PK', { dateStyle: 'medium', timeStyle: 'short' }); }
+            catch { return s; }
         }
-        
+
         function toggleSec(id) {
             document.getElementById(id).classList.toggle('open');
         }
-        
+
+        /* FIX: toggleNotif uses a single consistent class ('active') */
+        function toggleNotif() {
+            document.getElementById('notif-panel').classList.toggle('active');
+            document.getElementById('notif-overlay').classList.toggle('active');
+        }
+
         function setPillFilter(type, val, el) {
             el.closest('.pills').querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
             el.classList.add('active');
@@ -1073,18 +972,15 @@
             if (type === 'tasks') loadTasks();
             if (type === 'appts') loadAppts();
         }
-        
+
         function fillPatSelects(list) {
             ['pi-sel','t-patsel','a-patsel','e-patsel','c-patsel','v-patsel','vf-patsel','sym-patsel'].forEach(id => {
-                const el = document.getElementById(id);
-                if (!el) return;
+                const el = document.getElementById(id); if (!el) return;
                 const first = el.options[0].outerHTML;
-                el.innerHTML = first + list.map(p =>
-                    `<option value="${p.patient_id}">${p.patient_name}</option>`
-                ).join('');
+                el.innerHTML = first + list.map(p => `<option value="${p.patient_id}">${p.patient_name}</option>`).join('');
             });
         }
-        
+
         const titles = {
             dashboard: 'Dashboard', patients: 'Patient Management',
             patinfo: 'Patient Information', tasks: 'Task Manager',
@@ -1092,14 +988,19 @@
             vitals: 'Vitals Monitoring', symptoms: 'Symptom Tracker',
             stress: 'Stress Level Predictor', cost: 'Medical Cost Predictor',
         };
-        
+
+        /* FIX: Single nav() definition */
         function nav(p) {
             document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
             document.querySelectorAll('.sb-item').forEach(x => x.classList.remove('active'));
             document.getElementById('panel-' + p).classList.add('active');
             document.querySelector(`[data-p="${p}"]`)?.classList.add('active');
             document.getElementById('h-title').textContent = titles[p] || p;
-        
+
+            /* Close notification panel when navigating */
+            document.getElementById('notif-panel')?.classList.remove('active');
+            document.getElementById('notif-overlay')?.classList.remove('active');
+
             if (p === 'dashboard') loadDash();
             if (p === 'patients') loadPats();
             if (p === 'patinfo') loadPatInfo();
@@ -1109,9 +1010,7 @@
             if (p === 'vitals') { document.getElementById('v-patsel').value = ''; loadVitals(); }
             if (p === 'symptoms') { document.getElementById('sym-patsel').value = ''; loadSymptoms(); }
             if (p === 'stress') {
-                ['s-sleep','s-qual','s-act','s-hr','s-steps','s-sys','s-dia'].forEach(id => {
-                    document.getElementById(id).value = '';
-                });
+                ['s-sleep','s-qual','s-act','s-hr','s-steps','s-sys','s-dia'].forEach(id => { document.getElementById(id).value = ''; });
                 document.getElementById('stress-val').textContent = '';
                 document.getElementById('stress-box').classList.remove('show');
             }
@@ -1124,13 +1023,23 @@
                 document.getElementById('cost-box').classList.remove('show');
             }
         }
-        
+
+        /* FIX: Single logout() definition */
         function logout() {
             sessionStorage.clear();
             window.location.href = 'login.html';
         }
-        
-        // ── Stub functions so panels don't crash ──────────────────────────────────────
+
+        /* FIX: Single filterPatientsByPrefix() definition */
+        function filterPatientsByPrefix(val) {
+            const rows = document.querySelectorAll('#pat-tbl tbody tr');
+            rows.forEach(row => {
+                const name = row.cells[1]?.textContent?.toLowerCase() || '';
+                row.style.display = name.includes(val.toLowerCase()) ? '' : 'none';
+            });
+        }
+
+        /* ── Demo stub functions ── */
         function loadDash() {
             document.getElementById('st-pats').textContent = '0';
             document.getElementById('st-tasks').textContent = '0';
@@ -1139,14 +1048,14 @@
             const tb = document.querySelector('#dash-tbl tbody');
             if (tb) tb.innerHTML = `<tr><td colspan="4"><div class="empty"><div class="empty-icon">👥</div><p>No data in demo mode.</p></div></td></tr>`;
         }
-        
+
         function loadPats() {
             patients = [];
             const tb = document.querySelector('#pat-tbl tbody');
             if (tb) tb.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">👥</div><p>No data in demo mode.</p></div></td></tr>`;
             fillPatSelects([]);
         }
-        
+
         function loadPatInfo() { loadPats(); }
         function loadTasks() {
             const tb = document.querySelector('#task-tbl tbody');
@@ -1169,11 +1078,6 @@
             if (el) el.innerHTML = `<div class="empty"><div class="empty-icon">🩺</div><p>No data in demo mode.</p></div>`;
         }
         function loadNotifs() {}
-        function toggleNotif() {
-            document.getElementById('notif-panel').classList.toggle('open');
-            document.getElementById('notif-overlay').classList.toggle('open');
-        }
-        function filterPatientsByPrefix() {}
         function loadDoctorsForDropdown() {}
         function onDoctorSelect() {}
         function selPat() {}
@@ -1198,6 +1102,7 @@
         function saveVitals() { toast('Not available in demo mode', 'err'); }
         function delVitals() { toast('Not available in demo mode', 'err'); }
         function toggleSymptomForm() { toast('Not available in demo mode', 'err'); }
+        function showSymptomTab() {}
         function addPredefinedSymptom() { toast('Not available in demo mode', 'err'); }
         function addCustomSymptom() { toast('Not available in demo mode', 'err'); }
         function delPredefinedSymptom() { toast('Not available in demo mode', 'err'); }
@@ -1207,11 +1112,12 @@
         function handleCostModeChange() {}
         function fillCostFromPat() {}
         function predictCostFromPatInfo() { toast('Not available in demo mode', 'err'); }
-        
+        function doStress() { toast('Not available in demo mode', 'err'); }
+        function doCost() { toast('Not available in demo mode', 'err'); }
+
         document.addEventListener('DOMContentLoaded', function () {
             loadDash();
         });
-        
     </script>
 </body>
 </html>
