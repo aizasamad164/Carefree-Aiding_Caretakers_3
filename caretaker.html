@@ -961,8 +961,8 @@
 
         /* FIX: toggleNotif uses a single consistent class ('active') */
         function toggleNotif() {
-            document.getElementById('notif-panel').classList.toggle('active');
-            document.getElementById('notif-overlay').classList.toggle('active');
+            document.getElementById('notif-panel').classList.toggle('open');
+            document.getElementById('notif-overlay').classList.toggle('open');
         }
 
         function setPillFilter(type, val, el) {
@@ -998,8 +998,8 @@
             document.getElementById('h-title').textContent = titles[p] || p;
 
             /* Close notification panel when navigating */
-            document.getElementById('notif-panel')?.classList.remove('active');
-            document.getElementById('notif-overlay')?.classList.remove('active');
+            document.getElementById('notif-panel')?.classList.remove('open');
+            document.getElementById('notif-overlay')?.classList.remove('open');
 
             if (p === 'dashboard') loadDash();
             if (p === 'patients') loadPats();
